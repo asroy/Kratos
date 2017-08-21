@@ -967,29 +967,6 @@ namespace Kratos
 			Vector3 fiberAxis1 = prod(trans(localToGlobalSmall), temp);
 			fiberAxis1 /= std::sqrt(inner_prod(fiberAxis1, fiberAxis1));
 
-
-			if (this->Id() == 137)// TODO delete
-			{
-				std::cout << "\n\n Element 137 gauss output = " << fiberAxis1 << std::endl;
-				std::cout << "rotation angle = " << fiberSectionRotation / KRATOS_M_PI *180.0 << std::endl;
-				Vector localAxis2 = ZeroVector(3);
-				Vector localAxis3 = ZeroVector(3);
-				for (size_t i = 0; i < 3; i++)
-				{
-					localAxis1[i] = LCSOrientation(0, i);
-					localAxis2[i] = LCSOrientation(1, i);
-					localAxis3[i] = LCSOrientation(2, i);
-				}
-				Vector lc3test = MathUtils<double>::CrossProduct(localAxis1, localAxis2);
-				std::cout << "\nglocalAxis1 = " << localAxis1 << std::endl;
-				std::cout << "glocalAxis2 = " << localAxis2 << std::endl;
-				std::cout << "glocalAxis3 = " << localAxis3 << std::endl;
-
-				std::cout << "localGlobalFiberDirection = " << temp << std::endl;
-				std::cout << "localAxis1 = " << prod(LCSOrientation,localAxis1) << std::endl;
-				std::cout << "fiberAxis1 = " << fiberAxis1 << std::endl;
-			}
-
 			//write results
 			for (size_t dir = 0; dir < 1; dir++)
 			{

@@ -140,6 +140,29 @@ namespace Kratos {
 		///@{
 		void compositeOrientationAssignment(ModelPart& rSubModelpart, Vector3 GlobalFiberDirection, Vector3 normalVector, ProcessInfo& rCurrentProcessInfo)
 		{
+			// Select approach -------------------------------------------------
+			int caseId = 1;
+
+			// case 1
+			// (strictly fulfills alignment via hard orthogonality)
+			//
+			// Iterative approach which rotates the vector in the element's plane to make sure 'element_fiber_dir <dot> <orthogonal_vector> = 0, where orthogonal_vector = 'global_fiber <cross prod> projection_dir'.
+
+
+			// case 2 
+			// (generally aligns with global fiber)
+			// set perform_normal_alignment to FALSE for less accuracy but more smoothness
+			bool perform_normal_alignment = true;
+
+			// OPTIONAL (if perform_normal_alignment == true):
+			// Computes the 3d rotation between element normal and projection_dir. 
+			// 'local_fiber = 3d_rotation x global_fiber'
+			
+			// ALWAYS PERFORMED:
+			// Determine angle between lc1 and local fiber
+			
+			// -----------------------------------------------------------------
+
 			// Declare working variables
 			Matrix LCSOrientation, R;
 			Vector localGlobalFiberDirection, rotation_axis;
@@ -148,8 +171,10 @@ namespace Kratos {
 			Vector localAxis3 = ZeroVector(3);
 			double cosTheta, theta, rotation_angle, dotCheck;
 			Properties::Pointer pElementProps;
+			Vector orthogonal_vector;
+			bool debug_printout = true;
 
-			// Optional printout of details
+			// Optional printout of details for current part
 			bool printDetails = true;
 			if (printDetails)
 			{
@@ -176,6 +201,7 @@ namespace Kratos {
 			GlobalFiberDirection /= std::sqrt(inner_prod(GlobalFiberDirection, GlobalFiberDirection));
 			normalVector /= std::sqrt(inner_prod(normalVector, normalVector));
 
+			// Loop over all elements in part
 			for (auto& element : rSubModelpart.Elements())
 			{
 				// get current element properties
@@ -202,154 +228,54 @@ namespace Kratos {
 
 				// Flip projection vector such that is it in same dir as LC3
 				dotCheck = inner_prod(normalVector, localAxis3);
-				Vector tempNormalVector = Vector(normalVector);
+				Vector correctedNormalVector = Vector(normalVector);
 				if (dotCheck < 0.0)
 				{
-					tempNormalVector *= -1.0;
-				}
-
-				// get rotation matrix to align element normal with projection vec (global cartesian)
-				//rotation_axis = MathUtils<double>::CrossProduct(localAxis3, normalVector); // original
-				rotation_axis = MathUtils<double>::CrossProduct(tempNormalVector, localAxis3);
-				rotation_angle = inner_prod(tempNormalVector, localAxis3);
-				if (abs(rotation_angle) < (1.0 - 1E-6)) // skip if already co-linear
-				{
-					rotation_angle = std::acos(rotation_angle);
-					R = setUpRotationMatrix(rotation_angle, rotation_axis);
-					localGlobalFiberDirection = prod(R, localGlobalFiberDirection);
+					correctedNormalVector *= -1.0;
 				}
 
 
-				Vector mytemp = prod((R), tempNormalVector);
-
-
-				bool debugPrint = false;
-				if (element.Id() == 137)
+				// Perform the assignment method selected ----------------------
+				switch (caseId)
 				{
-					std::cout << element.Info() << std::endl;
-					debugPrint = false;
-				}
-				
-				if (debugPrint)
-				{
-					std::cout << "\nunrotated normalVector dot localAxis3 = " << inner_prod(tempNormalVector, localAxis3) << std::endl;
-					std::cout << "rotated normalVector dot localAxis3 = " << inner_prod(mytemp, localAxis3) << std::endl;
-					
-					std::cout << "rotated localGlobalFiberDirection dot localAxis3 = " << inner_prod(localGlobalFiberDirection, localAxis3) << std::endl;
-					std::cout << "rotated normalVector  = " << mytemp << std::endl;
-					std::cout << "localAxis3  = " << localAxis3 << std::endl;
-					std::cout << "rotated localGlobalFiberDirection  = " << localGlobalFiberDirection << std::endl;
-					
-				}
-				
-				// Correct in-plane transformed global cartesian fiber orientation so that
-				// it maximises it's direction in accord with the pure
-				// global fiber direction.
-				bool rotated_fiber_correction = true;
-				if (rotated_fiber_correction)
-				{
-					//std::cout << "Element " << element.Id() << std::endl;
-					double tolerance = 1E-6;
-					double steps = 16.0;
-					double step_size = 2.0*KRATOS_M_PI / steps; // initially 45 degrees
-					double central_angle = 0.0; // from current alignment
-					double min_dot_prod = 10.0;
-					double best_angle = 0.0;
-					bool converged = false;
-					int iteration_limit = 20;
-					int iteration = 0;
+				case 1:
+					// use hard iterative approach
 
-					Vector global_fiber_cross_projection = Vector(MathUtils<double>::CrossProduct(GlobalFiberDirection, normalVector));
+					// create vector which we must be orthogonal to
+					orthogonal_vector = Vector(MathUtils<double>::CrossProduct(GlobalFiberDirection, normalVector));
+					//orthogonal_vector = Vector(MathUtils<double>::CrossProduct(GlobalFiberDirection, localAxis3));
 
-					while (converged == false)
+					theta = iterativelyDetermineBestAngle(localAxis1, localAxis3, orthogonal_vector,GlobalFiberDirection);
+					break;
+
+				case 2:
+
+					// OPTIONAL (if perform_normal_alignment == true):
+					// Computes the 3d rotation between element normal and projection_dir. 
+					// 'local_fiber = 3d_rotation x global_fiber'
+								
+					if (perform_normal_alignment)
 					{
-						for (size_t angle_step = 0; angle_step < steps; angle_step++)
-						{
-							double current_angle = best_angle + (angle_step - steps / 2.0)*step_size;
-							R = setUpRotationMatrix(current_angle, localAxis3);
-							//Vector tempFiber = prod(R, localGlobalFiberDirection);
-							Vector tempFiber = prod(R, localAxis1);
-							double current_dot_prod = inner_prod(tempFiber, global_fiber_cross_projection);
-							//current_dot_prod = tempFiber[0];
-							if (debugPrint)
-							{
+						// get rotation matrix to align element normal with projection vec (global cartesian)
+						// and apply it to global fiber direction to get 'draped' global fiber direction
+						// in the element's plane.
+						//
+						// Using this option increases alignment accuracy but can also give 'harder' transitions
 
-								std::cout << current_dot_prod << std::endl;
-							}
-							if (abs(current_dot_prod) < abs(min_dot_prod))
-							{
-								min_dot_prod = current_dot_prod;
-								best_angle = current_angle;
-							}
-						}
-						step_size /= steps;
-						iteration++;
-						if (abs(min_dot_prod)  < tolerance)
+						rotation_axis = MathUtils<double>::CrossProduct(correctedNormalVector, localAxis3);
+						rotation_angle = inner_prod(correctedNormalVector, localAxis3);
+						if (abs(rotation_angle) < (1.0 - 1E-6)) // skip if already co-linear
 						{
-							converged = true;
-						}
-						if (iteration > iteration_limit)
-						{
-							converged = true;
+							rotation_angle = std::acos(rotation_angle);
+							R = setUpRotationMatrix(rotation_angle, rotation_axis);
+							localGlobalFiberDirection = prod(R, localGlobalFiberDirection);
 						}
 					}
 
-					// With the best angle determined, rotate the optimised
-					// in-plane transformed global cartesian fiber orientation
-					R = setUpRotationMatrix(best_angle, localAxis3);
-					localGlobalFiberDirection = prod(R, localGlobalFiberDirection);
 
-					// Make sure it points in the right direction.
-					if (inner_prod(localGlobalFiberDirection, GlobalFiberDirection) < 0)
-					{
-						R = setUpRotationMatrix(KRATOS_M_PI, localAxis3);
-						localGlobalFiberDirection = prod(R, localGlobalFiberDirection);
-					}
+					// ALWAYS PERFORMED:
+					// Determine angle between lc1 and local fiber
 
-					if (debugPrint)
-					{
-						std::cout << "corrected localGlobalFiberDirection  = " << localGlobalFiberDirection << std::endl;
-					}
-				}
-
-				
-				
-
-
-
-				bool global_approach = false;
-				if (global_approach)
-				{
-					// get rotation matrix to align element normal with projection vec (global cartesian)
-					//rotation_axis = MathUtils<double>::CrossProduct(localAxis3, normalVector); // original
-					rotation_axis = MathUtils<double>::CrossProduct(localGlobalFiberDirection, localAxis1);
-					rotation_axis /= std::sqrt(inner_prod(rotation_axis, rotation_axis));
-					rotation_angle = inner_prod(localGlobalFiberDirection, localAxis1);
-					if (abs(rotation_angle) < (1.0 - 1E-6)) // skip if already co-linear
-					{
-						rotation_angle = std::acos(rotation_angle);
-						//R = setUpRotationMatrix(rotation_angle, rotation_axis);
-						//localGlobalFiberDirection = prod(R, localGlobalFiberDirection);
-						theta = rotation_angle*-1.0;
-					}
-
-					if (debugPrint)
-					{
-						std::cout << "inner_prod(rotation_axis,localAxis3) = " << inner_prod(rotation_axis, localAxis3) << std::endl;
-						std::cout << "rotation axis = " << rotation_axis << std::endl;
-						std::cout << "localAxis3 = " << localAxis3 << std::endl;
-					}
-					
-					double dotProd = inner_prod(rotation_axis, localAxis3);
-					if (dotProd < (1.0 - 1E-6))
-					{
-						theta *= -1.0;
-					}
-
-					
-				}
-				else
-				{
 					// Put everything in local space (local cartesian)
 					localGlobalFiberDirection = prod(LCSOrientation, localGlobalFiberDirection);
 					localAxis1 = prod(LCSOrientation, localAxis1);
@@ -367,17 +293,11 @@ namespace Kratos {
 						theta *= -1.0;
 					}
 
-					if (debugPrint)
-					{
-						std::cout << "rotation angle = " << theta / KRATOS_M_PI *180.0 << std::endl;
-						std::cout << "localAxis1 = " << localAxis1 << std::endl;
-						std::cout << "localAxis2 = " << localAxis2 << std::endl;
-						std::cout << "localGlobalFiberDirection = " << localGlobalFiberDirection << std::endl;
-					}
-					
+					break;
+
+				default:
+					break;
 				}
-				
-				
 
 				// set required rotation in element
 				pElementProps = element.pGetProperties();
@@ -387,6 +307,57 @@ namespace Kratos {
 				// add option to write out angles so they don't have to be computed next time
 					// or maybe this should be a separate python call
 			}// sub-modelpart element loop
+		}
+
+		double iterativelyDetermineBestAngle(Vector localAxis1, Vector localAxis3, Vector orthogonal_vector, Vector GlobalFiberDirection)
+		{
+			double tolerance = 1E-9;
+			double steps = 16.0;
+			double step_size = 2.0*KRATOS_M_PI / steps; // initially 45 degrees
+			double central_angle = 0.0; // from current alignment
+			double min_dot_prod = 10.0;
+			double best_angle = 0.0;
+			bool converged = false;
+			int iteration_limit = 20;
+			int iteration = 0;
+			Vector tempFiber, bestFiber;
+
+			while (converged == false)
+			{
+				for (size_t angle_step = 0; angle_step < steps; angle_step++)
+				{
+					double current_angle = best_angle + (angle_step - steps / 2.0)*step_size;
+					Matrix R = setUpRotationMatrix(current_angle, localAxis3);
+					tempFiber = prod(R, localAxis1);
+					double current_dot_prod = inner_prod(tempFiber, orthogonal_vector);
+					
+					if (abs(current_dot_prod) < abs(min_dot_prod))
+					{
+						min_dot_prod = current_dot_prod;
+						best_angle = current_angle;
+						bestFiber = Vector(tempFiber);
+					}
+				}
+				step_size /= (steps / 2);
+				iteration++;
+				if (abs(min_dot_prod) < tolerance)
+				{
+					converged = true;
+				}
+				if (iteration > iteration_limit)
+				{
+					std::cout << "iteration lim" << std::endl;
+					converged = true;
+				}
+			}
+
+			// Make sure we are pointing in the right direction.
+			if (inner_prod(tempFiber, GlobalFiberDirection) < 0.0)
+			{
+				best_angle += KRATOS_M_PI;
+			}
+
+			return best_angle;
 		}
 
 		Matrix setUpRotationMatrix(double angle, Vector& rotation_axis)
