@@ -216,8 +216,16 @@ class AdjointVMSMonolithicSolver:
         self.solver.FinalizeSolutionStep()
 
     def Solve(self):
-        self.solver.Solve()
-
+        maximum_iterations = 5
+        for itr in range(0, maximum_iterations):
+            maximum_error_ratio = 0.0
+            self.solver.Solve()
+            for node in self.main_model_part.Nodes:
+                if maximum_error_ratio < node.GetValue(KratosMultiphysics.ERROR_RATIO):
+                    maximum_error_ratio = node.GetValue(KratosMultiphysics.ERROR_RATIO)
+            print('--- Numerical diffusion iteration %3d, maximum error ratio %e' % (itr+1, maximum_error_ratio))                    
+            if maximum_error_ratio == 1.0:
+                break
     def SetEchoLevel(self, level):
         self.solver.SetEchoLevel(level)
 

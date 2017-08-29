@@ -24,6 +24,7 @@
 #include "geometries/tetrahedra_3d_4.h"
 #include "includes/serializer.h"
 #include "utilities/geometry_utilities.h"
+#include "custom_utilities/eigen_decomposition.h"
 
 // Application includes
 #include "adjoint_fluid_application_variables.h"
@@ -443,6 +444,174 @@ protected:
      * The VMS-stabilized mass matrix is computed at the given step.
      * We assume that the mesh does not move between steps.
      */
+     
+    double CalculateDiffusion()
+    {
+        // return CalculateDiffusion_RatioMethod();
+        return CalculateDiffusion_EigenMethod();
+    }
+
+    double CalculateDiffusion_EigenMethod()
+    {
+        ShapeFunctionDerivativesType DN_DX;
+        array_1d< double, TNumNodes > N;
+        double Volume;
+        double Viscosity;
+        IndexType step = 0;
+        GeometryType& rGeom = this->GetGeometry();
+
+        GeometryUtils::CalculateGeometryData(this->GetGeometry(),DN_DX,N,Volume);
+
+        this->EvaluateInPoint(Viscosity,VISCOSITY,N);
+
+        boost::numeric::ublas::bounded_matrix< double, TDim, TDim > GradVel;
+        this->CalculateVelocityGradient(GradVel,DN_DX);
+       
+        array_1d< double, TDim > rVel_Adjoint;
+        this->EvaluateInPoint(rVel_Adjoint,ADJOINT_VELOCITY,N,step);
+
+        boost::numeric::ublas::bounded_matrix< double, TDim, TDim > Symmetric_GradVel;
+        noalias(Symmetric_GradVel) = 0.5*(GradVel + trans(GradVel));
+
+        array_1d<double, TDim> eigen_values;
+
+        Eigen<TDim>::Calculate_EigenValues(Symmetric_GradVel, eigen_values);
+
+
+        if (eigen_values[TDim-1] >= 0.0)
+        {
+            rGeom[0].GetValue(ERROR_RATIO) = 1.0;
+            return Viscosity;            
+        }
+
+
+        double energy_production = 0.0;
+        for (int i = TDim-1; i>=0; i--)
+            if (eigen_values[i] < 0.0) {
+                array_1d<double, TDim> eigen_vector;
+                Eigen<TDim>::Calculate_EigenVector(Symmetric_GradVel, eigen_values[i], eigen_vector);
+                energy_production += std::abs(eigen_values[i]*Eigen<TDim>::Calculate_DotProduct(rVel_Adjoint, eigen_vector));
+            }
+
+        boost::numeric::ublas::bounded_matrix< double, TDim, TDim > rAdjointGradVel;
+
+        const array_1d< double, TDim >& rVel = rGeom[0].FastGetSolutionStepValue(ADJOINT_VELOCITY,step);
+        for (IndexType m = 0; m < TDim; m++)
+            for (IndexType n = 0; n < TDim; n++)
+                rAdjointGradVel(m,n) = DN_DX(0,n) * rVel[m];
+        // node 1,2,...
+        for (IndexType iNode = 1; iNode < TNumNodes; iNode++)
+        {
+            const array_1d< double, TDim>& rVel = rGeom[iNode].FastGetSolutionStepValue(ADJOINT_VELOCITY,step);
+            for (IndexType m = 0; m < TDim; m++)
+                for (IndexType n = 0; n < TDim; n++)
+                    rAdjointGradVel(m,n) += DN_DX(iNode,n) * rVel[m];
+        }
+        
+        //calculating frobenius norm of AdjointGradientTensor
+        double frobenius_norm_square = 0.0;
+        for (IndexType m = 0; m < TDim; m++)
+            for (IndexType n = 0; n < TDim; n++)
+                frobenius_norm_square += rAdjointGradVel(m,n)*rAdjointGradVel(m,n);
+
+        double energy_dissipation = Viscosity*frobenius_norm_square;
+
+        // std::cout<<"Production: "<<energy_production<<", dissipation: "<<energy_dissipation<<std::endl;
+
+        if (energy_production == 0.0 && energy_dissipation == 0.0) {
+            rGeom[0].GetValue(ERROR_RATIO) = 2.0;
+            return Viscosity;
+        }
+
+        double alpha = energy_production/energy_dissipation;
+        if (alpha < 1.0)
+            alpha = 1.0;
+        rGeom[0].GetValue(ERROR_RATIO) = alpha;
+        return Viscosity*alpha;
+    }
+
+    double CalculateDiffusion_RatioMethod()
+    {
+        ShapeFunctionDerivativesType DN_DX;
+        array_1d< double, TNumNodes > N;
+        double Volume;
+        double Viscosity;
+        IndexType step = 1;
+        GeometryType& rGeom = this->GetGeometry();
+
+        GeometryUtils::CalculateGeometryData(this->GetGeometry(),DN_DX,N,Volume);
+
+        this->EvaluateInPoint(Viscosity,VISCOSITY,N);
+
+        boost::numeric::ublas::bounded_matrix< double, TDim, TDim > GradVel;
+        this->CalculateVelocityGradient(GradVel,DN_DX);
+       
+        array_1d< double, TDim > rVel_Adjoint;
+        this->EvaluateInPoint(rVel_Adjoint,ADJOINT_VELOCITY,N,step);
+
+        boost::numeric::ublas::bounded_matrix< double, TDim, TDim > Symmetric_GradVel;
+        noalias(Symmetric_GradVel) = 0.5*(GradVel + trans(GradVel));
+
+        array_1d< double, TDim > GradVel_rVel_Adjoint;
+        noalias(GradVel_rVel_Adjoint) = prod(Symmetric_GradVel,rVel_Adjoint);
+
+        double energy_production = -Eigen<TDim>::Calculate_DotProduct(GradVel_rVel_Adjoint, rVel_Adjoint);
+
+        boost::numeric::ublas::bounded_matrix< double, TDim, TDim > rAdjointGradVel;
+
+        const array_1d< double, 3 >& rVel = rGeom[0].FastGetSolutionStepValue(ADJOINT_VELOCITY,step);
+        for (IndexType m = 0; m < TDim; m++)
+            for (IndexType n = 0; n < TDim; n++)
+                rAdjointGradVel(m,n) = DN_DX(0,n) * rVel[m];
+        // node 1,2,...
+        for (IndexType iNode = 1; iNode < TNumNodes; iNode++)
+        {
+            const array_1d< double, 3 >& rVel = rGeom[iNode].FastGetSolutionStepValue(ADJOINT_VELOCITY,step);
+            for (IndexType m = 0; m < TDim; m++)
+                for (IndexType n = 0; n < TDim; n++)
+                    rAdjointGradVel(m,n) += DN_DX(iNode,n) * rVel[m];
+        }
+        
+        //calculating frobenius norm of AdjointGradientTensor
+        double frobenius_norm_square = 0.0;
+        for (IndexType m = 0; m < TDim; m++)
+            for (IndexType n = 0; n < TDim; n++)
+                frobenius_norm_square += rAdjointGradVel(m,n)*rAdjointGradVel(m,n);
+
+        double energy_dissipation = Viscosity*frobenius_norm_square;
+
+        // std::cout<<"Production: "<<energy_production<<", Dissipation: "<<energy_dissipation<<std::endl;
+
+        // for numerical diffusion ration method
+        if (energy_production == 0.0 && energy_dissipation == 0.0) {
+            rGeom[0].GetValue(ERROR_RATIO) = 2.0;
+            return Viscosity;
+        }
+
+        if (energy_production > energy_dissipation){
+            double alpha = energy_production/energy_dissipation;
+            rGeom[0].GetValue(ERROR_RATIO) = alpha;
+            return Viscosity*alpha;
+        }
+        else {
+            return Viscosity;
+        }
+
+
+
+        //no numerical diffusion method
+        // return Viscosity;
+
+        // //relaxation method
+        // if (energy_production > energy_dissipation){
+        //     double mu_dash = energy_production/energy_dissipation;
+        //     return Viscosity + (mu_dash - Viscosity)*0.1;
+        // }
+        // else {
+        //     return Viscosity;
+        // }
+    }
+     
     void CalculateVMSMassMatrix(
             MatrixType& rMassMatrix,
             IndexType Step,
@@ -469,8 +638,8 @@ protected:
         this->EvaluateInPoint(Density,DENSITY,N,Step);
 
         // Dynamic viscosity
-        double Viscosity;
-        this->EvaluateInPoint(Viscosity,VISCOSITY,N,Step);
+        double Viscosity = CalculateDiffusion();
+        // this->EvaluateInPoint(Viscosity,VISCOSITY,N,Step);
         Viscosity *= Density;
 
         // u
@@ -577,8 +746,8 @@ protected:
         this->EvaluateInPoint(Density,DENSITY,N);
 
         // Dynamic viscosity
-        double Viscosity;
-        this->EvaluateInPoint(Viscosity,VISCOSITY,N);
+        double Viscosity = CalculateDiffusion();
+        // this->EvaluateInPoint(Viscosity,VISCOSITY,N);
         Viscosity *= Density;
 
         // u
@@ -715,8 +884,8 @@ protected:
         this->EvaluateInPoint(Density,DENSITY,N);
 
         // Dynamic viscosity
-        double Viscosity;
-        this->EvaluateInPoint(Viscosity,VISCOSITY,N);
+        double Viscosity = CalculateDiffusion();
+        // this->EvaluateInPoint(Viscosity,VISCOSITY,N);
         Viscosity *= Density;
 
         // u
@@ -862,6 +1031,7 @@ protected:
      *
      * where the current adjoint step is the \f$n^{th}\f$ time step.
      */
+    
     void CalculatePrimalGradientOfVMSSteadyTerm(
             MatrixType& rAdjointMatrix,
             const ProcessInfo& rCurrentProcessInfo)
@@ -888,8 +1058,8 @@ protected:
         this->EvaluateInPoint(Density,DENSITY,N);
 
         // Dynamic viscosity
-        double Viscosity;
-        this->EvaluateInPoint(Viscosity,VISCOSITY,N);
+        double Viscosity = CalculateDiffusion();
+        // this->EvaluateInPoint(Viscosity,VISCOSITY,N);
         Viscosity *= Density;
 
         // u
@@ -1125,8 +1295,8 @@ protected:
         this->EvaluateInPoint(Density,DENSITY,N);
 
         // Dynamic viscosity
-        double Viscosity;
-        this->EvaluateInPoint(Viscosity,VISCOSITY,N);
+        double Viscosity = CalculateDiffusion();
+        // this->EvaluateInPoint(Viscosity,VISCOSITY,N);
         Viscosity *= Density;
 
         // u

@@ -160,6 +160,7 @@ public:
     /// Destructor.
     virtual ~AdjointBossakScheme()
     {
+        mOutputFileStream.close();
     }
 
     ///@}
@@ -175,6 +176,8 @@ public:
         KRATOS_TRY
 
         BaseType::Initialize(rModelPart);
+        mOutputFileStream.open("Adjoint_Energy.data");
+        mOutputFileStream<<"time,adjoint_energy"<<std::endl;
 
         // check domain dimension and element
         const unsigned int WorkingSpaceDimension =
@@ -241,8 +244,10 @@ public:
 
         mInvDt = 1.0 / DeltaTime;
 
-        for (auto it = rModelPart.NodesBegin(); it != rModelPart.NodesEnd(); ++it)
+        for (auto it = rModelPart.NodesBegin(); it != rModelPart.NodesEnd(); ++it) {
             it->GetValue(NODAL_AREA) = 0.0; // todo: define application variable
+            it->GetValue(ERROR_RATIO) = 1.0; // todo: define application variable
+        }
 
         for (auto it = rModelPart.ElementsBegin(); it != rModelPart.ElementsEnd(); ++it)
             for (unsigned int iNode = 0; iNode < it->GetGeometry().PointsNumber(); ++iNode)
@@ -269,6 +274,8 @@ public:
         mMass1Switch = 1.0;
 
         mpObjectiveFunction->FinalizeSolutionStep(rModelPart);
+
+        CalculateAdjointEnergy(rModelPart);
 
         KRATOS_CATCH("")
     }
@@ -605,6 +612,8 @@ private:
     std::vector<LocalSystemVectorType> mObjectiveGradient;
     std::vector<LocalSystemMatrixType> mAdjointMassMatrix;
 
+    std::ofstream mOutputFileStream;
+
     ///@}
     ///@name Private Operators
     ///@{
@@ -612,6 +621,22 @@ private:
     ///@}
     ///@name Private Operations
     ///@{
+
+    void CalculateAdjointEnergy(ModelPart& rModelPart)
+    {
+        double total_energy = 0.0;
+        for (auto it = rModelPart.NodesBegin(); it != rModelPart.NodesEnd(); ++it) 
+        {
+            double v_x = it->FastGetSolutionStepValue(ADJOINT_VELOCITY_X, 0);
+            double v_y = it->FastGetSolutionStepValue(ADJOINT_VELOCITY_Y, 0);
+            double v_z = it->FastGetSolutionStepValue(ADJOINT_VELOCITY_Z, 0);
+            double p = it->FastGetSolutionStepValue(ADJOINT_PRESSURE, 0);
+            total_energy += (v_x*v_x+v_y*v_y+v_z*v_z+p*p);
+        }
+        ProcessInfo& rProcessInfo = rModelPart.GetProcessInfo();
+        double time = rProcessInfo[TIME];
+        mOutputFileStream<<time<<","<<total_energy<<std::endl;
+    }
 
     void CalculateSolutionStepSensitivityContribution(ModelPart& rModelPart)
     {
