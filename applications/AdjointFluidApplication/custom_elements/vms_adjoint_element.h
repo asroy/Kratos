@@ -555,7 +555,7 @@ protected:
         array_1d< double, TDim > GradVel_rVel_Adjoint;
         noalias(GradVel_rVel_Adjoint) = prod(Symmetric_GradVel,rVel_Adjoint);
 
-        double energy_production = -Eigen<TDim>::Calculate_DotProduct(GradVel_rVel_Adjoint, rVel_Adjoint);
+        double energy_production = Eigen<TDim>::Calculate_DotProduct(GradVel_rVel_Adjoint, rVel_Adjoint);
 
         boost::numeric::ublas::bounded_matrix< double, TDim, TDim > rAdjointGradVel;
 
