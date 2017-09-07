@@ -1,0 +1,14 @@
+{
+    "problem_data"                     : {
+        "problem_name"    : "pure_diffusion",
+        "model_part_name" : "MainModelPart",
+        "domain_size"     : 3,
+        "parallel_type"   : "MPI"
+    },
+    "solver_settings"                  : {
+        "model_import_settings"        : {
+            "input_type"     : "mdpa",
+            "input_filename" : "one_cylinder-mod"
+        }
+    }
+}
