@@ -63,7 +63,7 @@ public:
 
 protected:
     std::vector<Hinge> mHinges;
- 
+
 private:
 
 friend class Serializer;
