@@ -8,48 +8,74 @@ template<typename TCommunicator,
 class PointSearchMethod
 {
 private:
-    using Location = typename TCommunicator::Location;
-    using DistributedKeyIssuer = typename TDistributedKeyIssuerType<Location>;
-    using Key = typename DistributedKeyIssuer::Key;
-    using PointSearcher = TPointSearcherType<Key>;
+    struct Coordinate
+    {
+        double mCoordinate[3];
+    }
 
-    using PointSearcherManager = DistributedAssignment::DistributedContractorManager<PointSearcher, TCommunicator, TDistributedKeyIssuerType>;
-    using PointSearchAssignmentManager = DistributedAssignment::DistributedAssignmentManager<>
+    struct DonorInfo
+    {
+        std::size_t mNumDonorNode;
+        std::vector<std::size_t> mDonorNodesId;
+    }
+
+    using Location = typename TCommunicator::Location;
+    using DistributedKeyIssuer = TDistributedKeyIssuerType<Location>;
+    using Key = typename DistributedKeyIssuer::Key;
+
+    using DummyContractor = DistributedAssignment::DummyContractor<Key>;
+    using DummyContractorManager = DistributedAssignment::DistributedContractorManager<DummyContractor>
+
+    using PointSearcher = TPointSearcherType<Key>;
+    using PointSearcherManager = DistributedAssignment::DistributedContractorManager<PointSearcher,TCommunicator,TDistributedKeyIssuerType>;
+
+    using PointSearchAssignmentManager = DistributedAssignment::DistributedAssignmentManager<DummyContractor,PointSearcher,Coordinate,DonorInfo,TCommunicator,TDistributedKeyIssuerType,TDistributedKeyIssuerType>
+
     using PointSearcherPointer = TPointSearcherType *;
     using PointSearcherPointerVector = std::vector<TPointSearcherTypePointer>;
-    using DummyAssignor = DistributedAssignment::DummyContractor<>
-
+    
 public:
     PointSearchMethod( const TCommunicator & r_communicator, const & r_model_part )
         :   mrOversetCommunicator{r_communicator},
             mpDummyAssignorManager{nullptr},
-            mpPointSearcherMananger{nullptr},
+            mpPointSearcherManager{nullptr},
             mpPointSearchAssignmentManager{nullptr}
     {
-        
+        //dummy assignor
+        mpDummyAssignorManager = new DummyContractorManager{mrOversetCommunicator};
+        mpDummyAssignorManager->RegisterLocalContractor( new DummyContractor() );
+        mpDummyAssignorManager->GenerateGlobalContractorsRegistry();
 
-
+        //searcher
         PointSearcherPointerVector local_point_searchers_pointer = BuildPointSearchers(r_model_part);
-
         mpPointSearcherManager = new PointSearcherManager{mrOversetCommunicator};
-        RegisterLocalContractors( local_point_searchers_pointer, "PointSearcher" );
-        GenerateGlobalContractorsRegistry();
+        mpPointSearcherManager->RegisterLocalContractors( local_point_searchers_pointer, "PointSearcher" );
+        mpPointSearcherManager->GenerateGlobalContractorsRegistry();
 
-        mpPointSearchAssignmentManager = new 
+        //search assignment manager
+        mpPointSearchAssignmentManager = new PointSearchAssignmentManager{r_communicator, *mpDummyAssignorManager, *mpPointSearcherManager};
     }
 
     ~PointSearchMethod()
     {
-        //PointSearcher(s) are constructed by the constructor of PointSearchMethod,
-        //so we need to destruct them here
-        PointSearcherPointerVector local_point_searchers_pointer = LocalContractorsPointer();
-        DestroyPointSearchers( local_point_searchers_pointer );
+        //dummy assignor and manager
+        for( DummyContractor * p_dummy_assignor : mpDummyAssignorManager->LocalContractorsPointer() )
+            delete p_dummy_assignor;
+
+        delete mpDummyAssignorManager;
+        
+        //searchers and manager
+        for( PointSearcherPointer p_searcher : mpPointSearcherManager->LocalContractorsPointer() )
+            delete p_searcher;
+
+        delete mpPointSearcherManager;
+
+        //assignment mananger
+        delete mpPointSearchAssignmentManager;
     }
 
     //point searchers
     PointSearcherPointerVector BuildPointSearchers() const;
-    
-    void DestroyPointSearchers( PointSearcherPointerVector );
 
 private:
     TCommunicator & mrOversetCommunicator;
