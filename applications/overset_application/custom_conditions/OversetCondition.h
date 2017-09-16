@@ -21,48 +21,52 @@
 #include "includes/serializer.h"
 #include "includes/condition.h"
 #include "includes/variables.h"
+#include "hinge.h"
 
 namespace Kratos
 {
 
-template<std::size TDimension, typename TDataType = double, class TWeightType = double>
-class Hinge : IntegrationPoint<TDimension, TDataType, TWeightType>
-{
-public:
-    virtual ~Hinge();
-
-protected:
-
-private:
-  	// A private default constructor necessary for serialization  
-    Hinge();
-  
-friend class Serializer;
-};
-
-
+template<std::szie_t TDimension,
+         typename THingeDataType
+         typename TDataType = double,
+         typename TWeightType = double>
 class OversetCondition : public Condition
 {
 public:
-    ///@name Type Definitions
-    ///@{
-
-    /// Counted pointer of PointSource2D
+    using Hinge = Hinge<TDimension, THingeDataType, TDataType, TWeightType>;
+    
+    /// Counted pointer of OversetCondition
     KRATOS_CLASS_POINTER_DEFINITION(OversetCondition);
 
-    /// Default constructor. 
+    /// Default constructor
     OversetCondition(IndexType NewId, GeometryType::Pointer pGeometry);
 
     OversetCondition(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties);
 
-    virtual ~OversetCondition();
+    ~OversetCondition() override;
 
     Condition::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes,  PropertiesType::Pointer pProperties) const;
 
-    Element & GetAdjacentElement();
+    const Element * AdjacentElementPointer()
+    { return mpElement; }
+
+    void GenerateHinges();
+    {
+        mHinges.clear();
+
+        int num_integration_point = //????
+
+        mHinges.resize(num_of_integration_point);
+
+        for( int i = 0; i < num_integration_point; i++ )
+        {
+            //assign data please
+        }
+    }
 
 protected:
     std::vector<Hinge> mHinges;
+    Element::Pointer mpElement; //smart pointer????
 
 private:
 
