@@ -12,16 +12,18 @@ private:
     TOversetCommunicator mOversetCommunicator;
     OversetConditionContainer mOversetConditions;
     PointSearchMethod * mpPointSearchMethod;
-    
+
 public:
     using PointSearchMethod = TPointSearchMethod<TOversetCommunicator,TPointSearcherType,TDistributedKeyIssuerType>;
-    using OversetConditionsContainer = PointerVectorSet<OversetCondition, IndexedObject> ;
+    using OversetConditionContainer = PointerVectorSet<OversetCondition, IndexedObject> ;
 
     OversetAssembler() = delete;
     
     OversetAssembler(const ModelPart & r_model_part)
         :   mrModelPart{r_model_part},
-            mOversetCommunicator()
+            mOversetCommunicator(),
+            mOversetConditions(),
+            mpPointSearchMethod{nullptr}
     {
         GetOversetConditionsFromInputModelPart();
         
@@ -159,7 +161,10 @@ public:
     //overset connectivity
     void GenerateHingeDonorRelation()
     {
-        
+        for( auto & rp_overset_condition : mOversetConditions )
+        {
+            for()
+        }
     }
 
     //

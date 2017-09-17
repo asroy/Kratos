@@ -21,20 +21,26 @@
 #include "includes/serializer.h"
 #include "includes/condition.h"
 #include "includes/variables.h"
-#include "hinge.h"
+#include "Hinge.h"
 
 namespace Kratos
 {
 
 template<std::szie_t TDimension,
-         typename THingeDataType
-         typename TDataType = double,
-         typename TWeightType = double>
+         typename THingeData
+         typename TData = double,
+         typename TWeight = double>
 class OversetCondition : public Condition
 {
-public:
-    using Hinge = Hinge<TDimension, THingeDataType, TDataType, TWeightType>;
+private:
+    //type
+    using Hinge = Hinge<TDimension, THingeData, TData, TWeight>;
     
+    //member
+    std::vector<Hinge> mHinges;
+    Element::Pointer mpAdjacentElement; //smart pointer????
+
+public:
     /// Counted pointer of OversetCondition
     KRATOS_CLASS_POINTER_DEFINITION(OversetCondition);
 
@@ -43,12 +49,13 @@ public:
 
     OversetCondition(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties);
 
-    ~OversetCondition() override;
+    ~OversetCondition() override
+    {}
 
     Condition::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes,  PropertiesType::Pointer pProperties) const;
 
-    const Element * AdjacentElementPointer()
-    { return mpElement; }
+    const Element::Pointer pAdjacentElement()
+    { return mpAdjacentElement; }
 
     void GenerateHinges();
     {
@@ -63,12 +70,6 @@ public:
             //assign data please
         }
     }
-
-protected:
-    std::vector<Hinge> mHinges;
-    Element::Pointer mpElement; //smart pointer????
-
-private:
 
 friend class Serializer;
 

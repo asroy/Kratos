@@ -1,3 +1,4 @@
+#pragma once
 
 namespace OversetAssembly
 {
@@ -8,6 +9,7 @@ template<typename TOversetCommunicator,
 class PointSearchMethod
 {
 private:
+    //private type
     using Location = typename TOversetCommunicator::Location;
     using DistributedKeyIssuer = TDistributedKeyIssuerType<Location>;
     using Key = typename DistributedKeyIssuer::Key;
@@ -20,7 +22,15 @@ private:
 
     using PointSearchAssignmentManager = DistributedAssignment::DistributedAssignmentManager<DummyContractor,PointSearcher,Coordinate,DonorInfo,TOversetCommunicator,TDistributedKeyIssuerType,TDistributedKeyIssuerType>
 
+    //private member
+    TOversetCommunicator & mrOverseTOversetCommunicator;
+    DummyContractorManager * mpDummyAssignorManager;
+    PointSearcherManager * mpPointSearcherManager;
+    PointSearcherAssignmentManager * mpPointSearchAssignmentManager;
+
 public:
+    PointSearchMethod() = delete;
+
     PointSearchMethod( const TOversetCommunicator & r_communicator, const & r_model_part )
         :   mrOverseTOversetCommunicator{r_communicator},
             mpDummyAssignorManager{nullptr},
@@ -59,12 +69,26 @@ public:
         //assignment mananger
         delete mpPointSearchAssignmentManager;
     }
-    
-private:
-    TOversetCommunicator & mrOverseTOversetCommunicator;
-    DummyContractorManager * mpDummyAssignorManager;
-    PointSearcherManager * mpPointSearcherManager;
-    PointSearcherAssignmentManager * mpPointSearchAssignmentManager;
+
+    void ClearAllSearches()
+    {
+        mpPointSearchAssignmentManager->ClearAllAssignments();
+    }
+
+    void AddSearch( const Key & r_searcher_key, const Coordinate & r_coordinate )
+    {
+        mpPointSearchAssignmentManager->AddAssignment( Key::NoKey(), r_searcher_key, r_coordinate );
+    }
+
+    void ExecuteAllSearches()
+    {
+        mpPointSearchAssignmentManager->ExecuteAllDistributedAssignments();
+    }
+
+    void GetSearchResults( std::vector<DonorInfo> & r_donors_info )
+    {
+        mpPointSearchAssignmentManager->GetResultsAtAssignor( r_donors_info );
+    }
 };
 
 //specialization for SteSearcher
