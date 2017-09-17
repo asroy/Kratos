@@ -2,24 +2,13 @@
 namespace OversetAssembly
 {
 
-template<typename TCommunicator,
-         typename <typename TDummy0> TPointSearcherType,
+template<typename TOversetCommunicator,
+         template <typename TDummy0> TPointSearcherType,
          template <typename TDummy1> TDistributedKeyIssuerType>
 class PointSearchMethod
 {
 private:
-    struct Coordinate
-    {
-        double mCoordinate[3];
-    }
-
-    struct DonorInfo
-    {
-        std::size_t mNumDonorNode;
-        std::vector<std::size_t> mDonorNodesId;
-    }
-
-    using Location = typename TCommunicator::Location;
+    using Location = typename TOversetCommunicator::Location;
     using DistributedKeyIssuer = TDistributedKeyIssuerType<Location>;
     using Key = typename DistributedKeyIssuer::Key;
 
@@ -27,28 +16,25 @@ private:
     using DummyContractorManager = DistributedAssignment::DistributedContractorManager<DummyContractor>
 
     using PointSearcher = TPointSearcherType<Key>;
-    using PointSearcherManager = DistributedAssignment::DistributedContractorManager<PointSearcher,TCommunicator,TDistributedKeyIssuerType>;
+    using PointSearcherManager = DistributedAssignment::DistributedContractorManager<PointSearcher,TOversetCommunicator,TDistributedKeyIssuerType>;
 
-    using PointSearchAssignmentManager = DistributedAssignment::DistributedAssignmentManager<DummyContractor,PointSearcher,Coordinate,DonorInfo,TCommunicator,TDistributedKeyIssuerType,TDistributedKeyIssuerType>
+    using PointSearchAssignmentManager = DistributedAssignment::DistributedAssignmentManager<DummyContractor,PointSearcher,Coordinate,DonorInfo,TOversetCommunicator,TDistributedKeyIssuerType,TDistributedKeyIssuerType>
 
-    using PointSearcherPointer = TPointSearcherType *;
-    using PointSearcherPointerVector = std::vector<TPointSearcherTypePointer>;
-    
 public:
-    PointSearchMethod( const TCommunicator & r_communicator, const & r_model_part )
-        :   mrOversetCommunicator{r_communicator},
+    PointSearchMethod( const TOversetCommunicator & r_communicator, const & r_model_part )
+        :   mrOverseTOversetCommunicator{r_communicator},
             mpDummyAssignorManager{nullptr},
             mpPointSearcherManager{nullptr},
             mpPointSearchAssignmentManager{nullptr}
     {
         //dummy assignor
-        mpDummyAssignorManager = new DummyContractorManager{mrOversetCommunicator};
+        mpDummyAssignorManager = new DummyContractorManager{mrOverseTOversetCommunicator};
         mpDummyAssignorManager->RegisterLocalContractor( new DummyContractor() );
         mpDummyAssignorManager->GenerateGlobalContractorsRegistry();
 
         //searcher
-        PointSearcherPointerVector local_point_searchers_pointer = BuildPointSearchers(r_model_part);
-        mpPointSearcherManager = new PointSearcherManager{mrOversetCommunicator};
+        std::vector<TPointSearcherType *> local_point_searchers_pointer = BuildPointSearchers(r_model_part);
+        mpPointSearcherManager = new PointSearcherManager{mrOverseTOversetCommunicator};
         mpPointSearcherManager->RegisterLocalContractors( local_point_searchers_pointer, "PointSearcher" );
         mpPointSearcherManager->GenerateGlobalContractorsRegistry();
 
@@ -73,34 +59,29 @@ public:
         //assignment mananger
         delete mpPointSearchAssignmentManager;
     }
-
-    //point searchers
-    PointSearcherPointerVector BuildPointSearchers() const;
-
+    
 private:
-    TCommunicator & mrOversetCommunicator;
+    TOversetCommunicator & mrOverseTOversetCommunicator;
+    DummyContractorManager * mpDummyAssignorManager;
     PointSearcherManager * mpPointSearcherManager;
     PointSearcherAssignmentManager * mpPointSearchAssignmentManager;
 };
 
-
-//specification for SteSearcher 
-template<typename TCommunicator,
-         template <typename TDummy> TDistributedKeyIssuerType>
-std::vector<SteSearcher *> PointSearchMethod<SteSearcher,TCommunicator,TDistributedKeyIssuerType>::BuildPointSearchers() const
+//specialization for SteSearcher
+template<typename TOversetCommunicator,
+         template <typename TDummy1> TDistributedKeyIssuerType>
+std::vector<SteSearcher *> PointSearchMethod<TOversetCommunicator,SteSearcher,TDistributedKeyIssuerType>::BuildPointSearchers() const
 {
-    using SteSearcherPointer = SteSearcher *;
-
-    std::vector<SteSearcherPointer> point_searchers_pointer;
+    std::vector<SteSearcher *> point_searchers_pointer;
 
     //generate cnn, crd
-    int num_nodes = mrModelPart.GetMesh().NumOfNodes();
-    int num_elements = mrModelPart.GetMesh().NumOfElements();
+    int num_node = mrModelPart.GetMesh().NumOfNodes();
+    int num_element = mrModelPart.GetMesh().NumOfElements();
 
-    double * p_crd = new double [3*num_nodes];
-    int * p_cnn = new int [4*num_elements];
-    std::array<int> node_local_to_equation_id(num_nodes);
-    std::map<int,int> node_equation_to_local_id(num_nodes);
+    double * p_crd = new double [3*num_node];
+    int * p_cnn = new int [4*num_element];
+    std::vector<std::size_t> node_local_to_equation_id(num_node);
+    std::map<std::size_t,int> node_equation_to_local_id;
 
     {
         int i = 0;
@@ -111,7 +92,7 @@ std::vector<SteSearcher *> PointSearchMethod<SteSearcher,TCommunicator,TDistribu
             p_crd[3*i+2] = r_node.Z();
             i++;
 
-            int equation_id = r_node.GetEquationId();
+            std::size_t equation_id = r_node.GetEquationId();
 
             node_local_to_equation_id[i] = equation_id;
             node_equation_to_local_id[equation_id] = i;
@@ -131,20 +112,13 @@ std::vector<SteSearcher *> PointSearchMethod<SteSearcher,TCommunicator,TDistribu
             }
         }
     }
-
-    //
-    SteSearcherPointer p_point_searcher = new SteSearcher( p_crd, p_ccn, num_node, num_element );
+    
+    //create SteSearcher
+    SteSearcher * p_point_searcher = new SteSearcher( p_crd, p_ccn, node_local_to_equation_id, num_node, num_element );
     point_searchers_pointer.push_back(p_point_searcher);
 
     return point_searchers_pointer;
 }
 
-template<typename TCommunicator,
-         template <typename TDummy> TDistributedKeyIssuerType>
-void PointSearchMethod<SteSearcher,TCommunicator,TDistributedKeyIssuerType>::DestroyPointSearchers(std::vector<SteSearcher *> ste_searchers_pointer)
-{
-    for( SteSearcher * p_ste_searcher : ste_searchers_pointer )
-        delete p_ste_searcher;
-}
 
 }

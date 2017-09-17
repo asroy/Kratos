@@ -2,38 +2,38 @@
 namespace OversetAssembly
 {
 
-template<typename TOversetCommunicatorType,
-         template <typename TDummyType> TDistributedContractorKeyIssueType,
-         typename TPointSearcherType,
-         typename THoleCutterType>
+template<typename TOversetCommunicator,
+         template <typename TDummy0> TPointSearcherType,
+         template <typename TDummy1> TDistributedKeyIssuerType>
 class OversetAssembler
 {
+private:
+    ModelPart & mrModelPart;
+    TOversetCommunicator mOversetCommunicator;
+    OversetConditionContainer mOversetConditions;
+    PointSearchMethod * mpPointSearchMethod;
+    
 public:
-    using KratosCommunicator = Kratos::Communicator;
-    using PointSearcherManager = DistributedContractorManager<TPointSearcherType, TOversetCommunicatorType, TDistributedContractorKeyIssueType>
+    using PointSearchMethod = TPointSearchMethod<TOversetCommunicator,TPointSearcherType,TDistributedKeyIssuerType>;
     using OversetConditionsContainer = PointerVectorSet<OversetCondition, IndexedObject> ;
 
     OversetAssembler() = delete;
     
-    OversetAssembler(const ModelPart & r_model_part, const & r_kratos_communicator, const TOversetCommunicatorType overset_communicator)
+    OversetAssembler(const ModelPart & r_model_part)
         :   mrModelPart{r_model_part},
-            mrKratosCommunicator{r_kratos_communicator},
-            mOversetCommunicator{overset_communicator},
-            mpPointSearcherManager{new PointSearcherManager{mrModelPart, mOversetCommunicator}},
-            mpHoleCutterManager{nullptr}
+            mOversetCommunicator()
     {
-        GenerateDefaultOversetConditions();
+        GetOversetConditionsFromInputModelPart();
+        
+        mpPointSearchMethod = new PointSearchMethod{mOversetCommunicator,mrModelPart};
     }
 
     ~OversetAssembler()
     {
-        delete mpPointSearcherManager;
-
-        if(mpHoleCutterManager)
-            delete mpHoleCutterManager;
+        delete mpPointSearchMethod;
     }
 
-    void GenerateDefaultOversetConditions()
+    void GetOversetConditionsFromInputModelPart()
     {
         // find out default overset condition
         mOversetConditions.clear();
@@ -166,12 +166,6 @@ public:
     void GetHingesValues()
     {}
 
-private:
-    ModelPart & mrModelPart;
-    KratosCommunicator mrKratosCommunicator;
-    TOversetCommunicatorType mOversetCommunicator;
-    OversetConditionContainer mOversetConditions;
-    TPointSearcherManagerType * mpPointSearcherManager;
 };
 
 }
