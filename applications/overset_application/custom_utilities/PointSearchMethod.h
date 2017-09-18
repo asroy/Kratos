@@ -1,7 +1,22 @@
 #pragma once
+#include <mpi.h>
+#include <iostream>
+#include <unistd.h>
+#include <vector>
 
 namespace OversetAssembly
 {
+
+#include "DistributedAssignment/Serializer.h"
+#include "DistributedAssignment/DataProfile.h"
+#include "DistributedAssignment/DataPrinter.h"
+#include "DistributedAssignment/MpiCommunicator.h"
+#include "DistributedAssignment/DistributedKeyIssuer.h"
+#include "DistributedAssignment/DistributedContractorManager.h"
+#include "DistributedAssignment/DistributedAssignmentManager.h"
+#include "DistributedAssignment/AssignmentData.h"
+#include "DistributedAssignment/DummyContractor.h"
+#include "DistributedAssignment/SteSearcher.h"
 
 template<typename TOversetCommunicator,
          template <typename TDummy0> TPointSearcherType,

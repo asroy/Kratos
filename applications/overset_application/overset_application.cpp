@@ -37,7 +37,10 @@ namespace Kratos
  		KratosApplication::Register();
  		std::cout << "Initializing KratosOversetApplication... " << std::endl;
  
-   		KRATOS_REGISTER_VARIABLE( BLOCK_ID )
+		KRATOS_REGISTER_VARIABLE( BLOCK_ID )
+
+		KRATOS_REGISTER_CONDITION( "OversetCondition", mOversetCondition )
+
  	}
 
 }  // namespace Kratos.

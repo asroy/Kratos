@@ -1,3 +1,5 @@
+#pragma once
+#include "PointSearchMethod.h"
 
 namespace OversetAssembly
 {
@@ -151,25 +153,21 @@ public:
     const OversetConditionContainer & OversetConditions() const
     { return mOversetConditions; }
 
-    //
     void GenerateHinges()
     {
         for( auto & rp_overset_condition : mOversetConditions )
             rp_overset_condition->GenerateHinges();
     }
 
-    //overset connectivity
-    void GenerateHingeDonorRelation()
-    {
-        for( auto & rp_overset_condition : mOversetConditions )
-        {
-            for()
-        }
-    }
+    // //overset connectivity
+    // void GenerateHingeDonorRelation()
+    // {
+    //     for( auto & rp_overset_condition : mOversetConditions )
+    //     {}
+    // }
 
-    //
-    void GetHingesValues()
-    {}
+    // void GetHingesValues()
+    // {}
 
 };
 

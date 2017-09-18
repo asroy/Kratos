@@ -1,3 +1,4 @@
+#pragma once
 
 template<std::size_t TDimension,
          typename THingeData,
@@ -5,21 +6,26 @@ template<std::size_t TDimension,
          typename TWeight = double>
 class Hinge : public IntegrationPoint<TDimension, TData, TWeight>
 {
-//type
 private:
-    using EquationIdVector = std::vector<std::size_t>;
-
-//method
+    using Base = IntegrationPoint<TDimension, TData, TWeight>;
+    
 public:
-    ~Hinge() override;
+    Hinge( const IntegrationPoint & r_integration_point )
+        :   Base{r_integration_point}
+    {}
+
+    ~Hinge() override
+    {}
 
 private:
   	// A private default constructor necessary for serialization  
-    Hinge();
+    Hinge()
+        :   Base()
+    {}
 
 //member
 private:
-    EquationIdVector mDonorNodesEquationIds;
+    std::vector<std::size_t> mDonorNodesEquationIds;
     std::vector<THingeData> mDonorsData;
 
 friend class Serializer;

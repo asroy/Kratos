@@ -80,6 +80,12 @@ namespace Python
 		typedef UblasSpace<double, Matrix, Vector> LocalSpaceType;
 		typedef LinearSolver<SparseSpaceType, LocalSpaceType > LinearSolverType;
 
+		class_<OversetAssembly::OversetAssembler, boost::noncopyable>
+		(	"OversetAssembler",
+			init<>(const ModelPart &)
+			.def("")
+		))
+
 
   }
 	
