@@ -1,14 +1,17 @@
-#pragma once
-#include <stdio.h>
-#include <string>
+#if !defined(KRATOS_OVERSET_DONORINFO_H_INCLUDED )
+#define  KRATOS_OVERSET_DONORINFO_H_INCLUDED
 
+namespace Kratos
+{
 namespace OversetAssembly
 {
+
 struct DonorInfo
 {
-    std::size_t mNumDonorNode;
     std::vector<std::size_t> mDonorNodesEquationId;
     double mBarycentricCoordinate[3];
 };
 
-}
+}//namespace OversetAssembly
+}//namespace Kratos
+#endif

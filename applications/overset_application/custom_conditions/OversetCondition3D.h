@@ -19,48 +19,49 @@
 // Project includes
 #include "includes/define.h"
 #include "includes/serializer.h"
-#include "includes/condition.h"
 #include "includes/variables.h"
+#include "includes/condition.h"
+#include "custom_conditions/Hinge3D.h"
 
 namespace Kratos
 {
 
-template<typename THinge>
-class OversetCondition : public Condition
+class OversetCondition3D : public Condition
 {
 public:
-    using Self = OversetCondition<THinge>;
-    
-    /// Counted pointer of OversetCondition
-    KRATOS_CLASS_POINTER_DEFINITION(Self);
+    using IntegrationPointType = GeometryData::IntegrationPointType;
+    using IntegrationPointsArrayType = GeometryData::IntegrationPointsArrayType;
+
+    /// Counted pointer of OversetCondition3D
+    KRATOS_CLASS_POINTER_DEFINITION(OversetCondition3D);
 
 public:
     /// Default constructor
-    OversetCondition(IndexType NewId, GeometryType::Pointer pGeometry)
+    OversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry)
         :   Condition(NewId, pGeometry)
     {}
 
-    OversetCondition(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties)
+    OversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties)
         :   Condition(NewId, pGeometry, pProperties)
     {}
 
-    ~OversetCondition() override
+    ~OversetCondition3D() override
     {}
 
     Condition::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes,  PropertiesType::Pointer pProperties) const override
     {
-        return Condition::Pointer new Self(NewId, GetGeometry().Create(ThisNodes), pProperties);
+        return Condition::Pointer(new OversetCondition3D(NewId, GetGeometry().Create(ThisNodes), pProperties));
     }
 
-    void GenerateHinges();
+    void GenerateHinges()
     {
-        Geometry::IntegrationPointsArrayType integration_points = pGetGeomrtry()->IntegrationPoints();
+        IntegrationPointsArrayType integration_points = pGetGeometry()->IntegrationPoints();
 
         mHinges.clear();
         mHinges.reserve(integration_points.size());
 
-        for( const Geometry::IntegrationPointType & : r_integration_point )
-            mHinges.push_back(THinge{r_integration_point});
+        for( const IntegrationPointType & r_integration_point : integration_points )
+            mHinges.push_back(Hinge3D{r_integration_point});
     }
 
     const Element::Pointer pAdjacentElement()
@@ -68,17 +69,16 @@ public:
 
 //member
 private:
-    std::vector<THinge> mHinges;
+    std::vector<Hinge3D> mHinges;
     Element::Pointer mpAdjacentElement;
 
-friend class Serializer;
-
   	// A private default constructor necessary for serialization  
-    OversetCondition()
+    OversetCondition3D()
         :   Condition()
     {}
 
+friend class Serializer;
 };
 
-} //namespace kratos 
+}//namespace Kratos 
 #endif

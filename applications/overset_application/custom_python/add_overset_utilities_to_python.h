@@ -48,8 +48,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
 
-#if !defined(KRATOS_ADD_UTILITIES_TO_PYTHON_H_INCLUDED )
-#define  KRATOS_ADD_UTILITIES_TO_PYTHON_H_INCLUDED
+#if !defined(KRATOS_ADD_OVERSET_UTILITIES_TO_PYTHON_H_INCLUDED )
+#define  KRATOS_ADD_OVERSET_UTILITIES_TO_PYTHON_H_INCLUDED
 
 
 
@@ -65,14 +65,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 namespace Kratos
 {
-
 namespace Python
 {
 
-  void  AddCustomUtilitiesToPython();
+    void AddOversetUtilitiesToPython();
 
 }  // namespace Python.
-  
 }  // namespace Kratos.
 
-#endif // KRATOS_ADD_UTILITIES_TO_PYTHON_H_INCLUDED  defined 
+#endif // KRATOS_ADD_OVERSET_UTILITIES_TO_PYTHON_H_INCLUDED  defined 

@@ -1,22 +1,26 @@
-#pragma once
-#include "PointSearchMethod.h"
+#if !defined(KRATOS_OVERSET_ASSEMBLY_H_INCLUDED )
+#define  KRATOS_OVERSET_ASSEMBLY_H_INCLUDED
 
+// External includes 
+#include "boost/smart_ptr.hpp"
+
+// Project includes
+#include "PointSearchMethod.h"
+#include "SteSearcher.h"
+
+
+namespace Kratos
+{
 namespace OversetAssembly
 {
 
-template<typename TOversetCommunicator,
-         template <typename TDummy0> TPointSearcherType,
-         template <typename TDummy1> TDistributedKeyIssuerType>
+
 class OversetAssembler
 {
-private:
-    ModelPart & mrModelPart;
-    TOversetCommunicator mOversetCommunicator;
-    OversetConditionContainer mOversetConditions;
-    PointSearchMethod * mpPointSearchMethod;
 
 public:
-    using PointSearchMethod = TPointSearchMethod<TOversetCommunicator,TPointSearcherType,TDistributedKeyIssuerType>;
+    using OversetCommunicator = DistributedAssignment::Communication::MpiCommunicator;
+    using PointSearchMethod = PointSearchMethod<SteSearcher>;
     using OversetConditionContainer = PointerVectorSet<OversetCondition, IndexedObject> ;
 
     OversetAssembler() = delete;
@@ -168,7 +172,14 @@ public:
 
     // void GetHingesValues()
     // {}
-
+    
+private:
+    ModelPart & mrModelPart;
+    OversetCommunicator mOversetCommunicator;
+    OversetConditionContainer mOversetConditions;
+    PointSearchMethod<TPointSearcher> * mpPointSearchMethod;
 };
 
-}
+}//namespace OverserAssembly
+}//namespace Kratos
+#endif

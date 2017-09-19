@@ -190,10 +190,6 @@ if(${STRING_DYNAMICS_APPLICATION} MATCHES ON)
   add_subdirectory(StringDynamicsApplication)
 endif(${STRING_DYNAMICS_APPLICATION} MATCHES ON)
 
-if(${PURE_DIFFUSION_APPLICATION} MATCHES ON)
-  add_subdirectory(pure_diffusion_application)
-endif(${PURE_DIFFUSION_APPLICATION} MATCHES ON)
-
 if(${MESHLESS_APPLICATION} MATCHES ON)
   add_subdirectory(meshless_application)
 endif(${MESHLESS_APPLICATION} MATCHES ON)
@@ -269,6 +265,15 @@ endif(${INCOMPRESSIBLE_FLUID_APPLICATION} MATCHES ON)
 if(${COMPRESSIBLE_POTENTIAL_FLOW_APPLICATION} MATCHES ON)
   add_subdirectory(CompressiblePotentialFlowApplication)
 endif(${COMPRESSIBLE_POTENTIAL_FLOW_APPLICATION} MATCHES ON)
+
+if(${PURE_DIFFUSION_APPLICATION} MATCHES ON)
+  add_subdirectory(pure_diffusion_application)
+endif(${PURE_DIFFUSION_APPLICATION} MATCHES ON)
+
+if(${OVERSET_APPLICATION} MATCHES ON)
+  add_subdirectory(overset_application)
+endif(${OVERSET_APPLICATION} MATCHES ON)
+
 
 # get_property(inc_dirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
 # message("applications subdir inc_dirs = ${inc_dirs}")

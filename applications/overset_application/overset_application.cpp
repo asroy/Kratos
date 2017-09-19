@@ -20,15 +20,16 @@
 #include "geometries/triangle_3d_3.h"
 #include "geometries/tetrahedra_3d_4.h"
 #include "geometries/line_2d.h"
-#include "overset_application.h"
 #include "includes/variables.h"
+#include "overset_application.h"
 
 
 namespace Kratos
 {
    	KRATOS_CREATE_VARIABLE(int, BLOCK_ID)
 
- 	KratosOversetApplication::KratosOversetApplication()
+	 KratosOversetApplication::KratosOversetApplication()
+	 	:	mOversetCondition3D ( 0, Element::GeometryType::Pointer( new Triangle3D3 <Node<3> >( Element::GeometryType::PointsArrayType (3) ) ) )
  	{}
  	
  	void KratosOversetApplication::Register()
@@ -39,7 +40,7 @@ namespace Kratos
  
 		KRATOS_REGISTER_VARIABLE( BLOCK_ID )
 
-		KRATOS_REGISTER_CONDITION( "OversetCondition", mOversetCondition )
+		KRATOS_REGISTER_CONDITION( "OversetCondition3D", mOversetCondition3D )
 
  	}
 

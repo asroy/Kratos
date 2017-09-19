@@ -24,11 +24,11 @@
 #include "includes/define.h"
 #include "includes/kratos_application.h"
 #include "includes/variables.h"
+#include "custom_conditions/OversetCondition3D.h"
 
 
 namespace Kratos
 {
-
 
 	// Variables definition 
   	KRATOS_DEFINE_VARIABLE(int, BLOCK_ID )
@@ -36,11 +36,12 @@ namespace Kratos
 	class KratosOversetApplication : public KratosApplication
 	{
 	public:
-		KRATOS_CLASS_POINTER_DEFINITION(KratosOversetApplication)
+		KRATOS_CLASS_POINTER_DEFINITION(KratosOversetApplication);
 
 		KratosOversetApplication();
 
-		virtual ~KratosOversetApplication(){}
+		virtual ~KratosOversetApplication()
+		{}
 
 		virtual void Register();
 
@@ -70,7 +71,7 @@ namespace Kratos
 		}
 
 	private:
-		const OversetCondition mOversetCondition;
+		const OversetCondition3D mOversetCondition3D;
 
 		KratosOversetApplication& operator=(KratosOversetApplication const& rOther);
 

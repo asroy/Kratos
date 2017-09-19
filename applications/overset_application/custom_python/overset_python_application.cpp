@@ -61,7 +61,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "includes/define.h"
 #include "overset_application.h"
 #include "custom_python/add_custom_strategies_to_python.h"
-#include "custom_python/add_custom_utilities_to_python.h"
+#include "custom_python/add_overset_utilities_to_python.h"
 
  
 namespace Kratos
@@ -83,7 +83,7 @@ namespace Python
 			;
 
 	AddCustomStrategiesToPython();
-	AddCustomUtilitiesToPython();
+	AddOversetUtilitiesToPython();
 
 	//registering variables in python
 //	KRATOS_REGISTER_IN_PYTHON_VARIABLE(NODAL_AREA);

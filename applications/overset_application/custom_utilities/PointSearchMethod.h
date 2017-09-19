@@ -1,52 +1,44 @@
-#pragma once
+#if !defined(KRATOS_OVERSET_POINT_SEARCH_METHOD_H_INCLUDED )
+#define  KRATOS_OVERSET_POINT_SEARCH_METHOD_H_INCLUDED
+
+// External includes 
+#include "boost/smart_ptr.hpp"
+
 #include <mpi.h>
 #include <iostream>
 #include <unistd.h>
 #include <vector>
 
+#include "DistributedAssignment.h"
+#include "SteSearcher.h"
+#include "Coordinate.h"
+#include "DonorInfo.h"
+
+namespace Kratos
+{
 namespace OversetAssembly
 {
 
-#include "DistributedAssignment/Serializer.h"
-#include "DistributedAssignment/DataProfile.h"
-#include "DistributedAssignment/DataPrinter.h"
-#include "DistributedAssignment/MpiCommunicator.h"
-#include "DistributedAssignment/DistributedKeyIssuer.h"
-#include "DistributedAssignment/DistributedContractorManager.h"
-#include "DistributedAssignment/DistributedAssignmentManager.h"
-#include "DistributedAssignment/AssignmentData.h"
-#include "DistributedAssignment/DummyContractor.h"
-#include "DistributedAssignment/SteSearcher.h"
-
-template<typename TOversetCommunicator,
-         template <typename TDummy0> TPointSearcherType,
-         template <typename TDummy1> TDistributedKeyIssuerType>
+template<typename TPointSearcher>
 class PointSearchMethod
 {
 private:
-    //private type
-    using Location = typename TOversetCommunicator::Location;
-    using DistributedKeyIssuer = TDistributedKeyIssuerType<Location>;
-    using Key = typename DistributedKeyIssuer::Key;
+    using OversetCommunicator = DistributedAssignment::Communication::MpiCommunicator;
+    using Location = typename OversetCommunicator::Location;
+    using KeyIssuer = DistributedAssignment::DistributedAssignment::DistributedKeyIssuer<Location>;
+    using Key = typename KeyIssuer::Key;
 
-    using DummyContractor = DistributedAssignment::DummyContractor<Key>;
-    using DummyContractorManager = DistributedAssignment::DistributedContractorManager<DummyContractor>
+    using DummyContractor = DistributedAssignment::DistributedAssignment::DummyContractor<Key>;
+    using DummyContractorManager = DistributedAssignment::DistributedAssignment::DistributedContractorManager<DummyContractor,OversetCommunicator,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer>;
 
-    using PointSearcher = TPointSearcherType<Key>;
-    using PointSearcherManager = DistributedAssignment::DistributedContractorManager<PointSearcher,TOversetCommunicator,TDistributedKeyIssuerType>;
+    using PointSearcherManager = DistributedAssignment::DistributedAssignment::DistributedContractorManager<TPointSearcher,OversetCommunicator,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer>;
 
-    using PointSearchAssignmentManager = DistributedAssignment::DistributedAssignmentManager<DummyContractor,PointSearcher,Coordinate,DonorInfo,TOversetCommunicator,TDistributedKeyIssuerType,TDistributedKeyIssuerType>
-
-    //private member
-    TOversetCommunicator & mrOverseTOversetCommunicator;
-    DummyContractorManager * mpDummyAssignorManager;
-    PointSearcherManager * mpPointSearcherManager;
-    PointSearcherAssignmentManager * mpPointSearchAssignmentManager;
+    using PointSearchAssignmentManager = DistributedAssignment::DistributedAssignment::DistributedAssignmentManager<DummyContractor,TPointSearcher,Coordinate,DonorInfo,OversetCommunicator,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer>;
 
 public:
     PointSearchMethod() = delete;
 
-    PointSearchMethod( const TOversetCommunicator & r_communicator, const & r_model_part )
+    PointSearchMethod( const OversetCommunicator & r_communicator, const ModelPart & r_model_part )
         :   mrOverseTOversetCommunicator{r_communicator},
             mpDummyAssignorManager{nullptr},
             mpPointSearcherManager{nullptr},
@@ -54,13 +46,15 @@ public:
     {
         //dummy assignor
         mpDummyAssignorManager = new DummyContractorManager{mrOverseTOversetCommunicator};
-        mpDummyAssignorManager->RegisterLocalContractor( new DummyContractor() );
+        mpDummyAssignorManager->RegisterLocalContractor( * (new DummyContractor()), "DummyContractor" );
         mpDummyAssignorManager->GenerateGlobalContractorsRegistry();
 
         //searcher
-        std::vector<TPointSearcherType *> local_point_searchers_pointer = BuildPointSearchers(r_model_part);
+        std::vector<TPointSearcher *> local_point_searchers_pointer;
+        TPointSearcher::BuildPointSearchersFromModelPart(mrModelPart, local_point_searchers_pointer);
+
         mpPointSearcherManager = new PointSearcherManager{mrOverseTOversetCommunicator};
-        mpPointSearcherManager->RegisterLocalContractors( local_point_searchers_pointer, "PointSearcher" );
+        mpPointSearcherManager->RegisterLocalContractors( local_point_searchers_pointer, "SteSearcher" );
         mpPointSearcherManager->GenerateGlobalContractorsRegistry();
 
         //search assignment manager
@@ -76,7 +70,7 @@ public:
         delete mpDummyAssignorManager;
         
         //searchers and manager
-        for( PointSearcherPointer p_searcher : mpPointSearcherManager->LocalContractorsPointer() )
+        for( TPointSearcher * p_searcher : mpPointSearcherManager->LocalContractorsPointer() )
             delete p_searcher;
 
         delete mpPointSearcherManager;
@@ -104,60 +98,14 @@ public:
     {
         mpPointSearchAssignmentManager->GetResultsAtAssignor( r_donors_info );
     }
+
+private:
+    OversetCommunicator & mrOverseTOversetCommunicator;
+    DummyContractorManager * mpDummyAssignorManager;
+    PointSearcherManager * mpPointSearcherManager;
+    PointSearchAssignmentManager * mpPointSearchAssignmentManager;
 };
 
-//specialization for SteSearcher
-template<typename TOversetCommunicator,
-         template <typename TDummy1> TDistributedKeyIssuerType>
-std::vector<SteSearcher *> PointSearchMethod<TOversetCommunicator,SteSearcher,TDistributedKeyIssuerType>::BuildPointSearchers() const
-{
-    std::vector<SteSearcher *> point_searchers_pointer;
-
-    //generate cnn, crd
-    int num_node = mrModelPart.GetMesh().NumOfNodes();
-    int num_element = mrModelPart.GetMesh().NumOfElements();
-
-    double * p_crd = new double [3*num_node];
-    int * p_cnn = new int [4*num_element];
-    std::vector<std::size_t> node_local_to_equation_id(num_node);
-    std::map<std::size_t,int> node_equation_to_local_id;
-
-    {
-        int i = 0;
-        for( auto & r_node : mrModelPart.GetMesh().Nodes() )
-        {
-            p_crd[3*i]   = r_node.X();
-            p_crd[3*i+1] = r_node.Y();
-            p_crd[3*i+2] = r_node.Z();
-            i++;
-
-            std::size_t equation_id = r_node.GetEquationId();
-
-            node_local_to_equation_id[i] = equation_id;
-            node_equation_to_local_id[equation_id] = i;
-        }
-    }
-
-    {
-        int i = 0;
-        for( auto & r_element : mrModelPart.GetMesh().Elements() )
-        {
-            assert( r_element.Nodes().size() == 4 )
-
-            for( auto r_node : r_element.Nodes() )
-            {
-                p_cnn[i] = node_equation_to_local_id[r_node.GetEquationId()];
-                i++;
-            }
-        }
-    }
-    
-    //create SteSearcher
-    SteSearcher * p_point_searcher = new SteSearcher( p_crd, p_ccn, node_local_to_equation_id, num_node, num_element );
-    point_searchers_pointer.push_back(p_point_searcher);
-
-    return point_searchers_pointer;
-}
-
-
-}
+}//namespace OversetAssemlby
+}//namespace Kratos
+#endif
