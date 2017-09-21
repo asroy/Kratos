@@ -61,7 +61,7 @@ public:
         mpPointSearchAssignmentManager = new PointSearchAssignmentManager{r_communicator, *mpDummyAssignorManager, *mpPointSearcherManager};
     }
 
-    ~PointSearchMethodTemp()
+    virtual ~PointSearchMethodTemp()
     {
         //dummy assignor and manager
         for( typename DummyContractorManager::ContractorPointerPairByContractorKey & r_dummy_assignor_pair : mpDummyAssignorManager->LocalContractorsPointer() )

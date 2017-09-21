@@ -47,7 +47,7 @@ public:
             mSteHandle{SplitTreeSearch::steNew( mpCrd, mpCnn, PRM_TPL_4TET, mNumElement, SplitTreeSearch::TRUE )}
     {}
 
-    ~SteSearcher()
+    virtual ~SteSearcher()
     {
         SplitTreeSearch::steFree( mSteHandle );//mpCrd, mpCnn will be deleted
     }
@@ -87,13 +87,16 @@ public:
                 p_crd[3*i]   = (* it_p_node)->X();
                 p_crd[3*i+1] = (* it_p_node)->Y();
                 p_crd[3*i+2] = (* it_p_node)->Z();
-                i++;
 
                 std::size_t node_id = (* it_p_node)->GetId();
 
                 local_id_to_node_id[i] = node_id;
                 node_id_to_local_id[node_id] = i;
+
+                i++;
             }
+
+            std::cout<<__func__<<"size of nodes "<<i<<std::endl;
         }
 
         {
@@ -113,6 +116,8 @@ public:
                     i++;
                 }
             }
+
+            std::cout<<__func__<<"size of cnn "<<i<<std::endl;
         }
         
         //create SteSearcher

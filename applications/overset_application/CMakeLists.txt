@@ -16,6 +16,12 @@ set( KRATOS_OVERSET_APPLICATION_SOURCES
 #find SplitTreeSearch library
 find_library(SplitTreeSearch_LIBRARY SplitTreeSearch ${SplitTreeSearch_DIR}/lib)
 
+if(SplitTreeSearch_LIBRARY STREQUAL "SplitTreeSearch_LIBRARY-NOTFOUND")
+  	message (FATAL_ERROR "SplitTreeSearch library not found")
+else(SplitTreeSearch_LIBRARY STREQUAL "SplitTreeSearch_LIBRARY-NOTFOUND")
+	message("-- Found SplitTreeSearch: " ${SplitTreeSearch_LIBRARY})
+endif(SplitTreeSearch_LIBRARY STREQUAL "SplitTreeSearch_LIBRARY-NOTFOUND")
+
 ###############################################################
 ## define library Kratos which defines the basic python interface
 add_library(KratosOversetApplication SHARED ${KRATOS_OVERSET_APPLICATION_SOURCES})

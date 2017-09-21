@@ -34,7 +34,7 @@ public:
         GetOversetConditionsFromInputModelPart();
     }
 
-    ~OversetAssembler()
+    virtual ~OversetAssembler()
     {
         delete mpPointSearchMethod;
     }
@@ -50,9 +50,11 @@ public:
         for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = r_conditions_pointer.ptr_begin(); it_p_condition != r_conditions_pointer.ptr_end(); it_p_condition = std::next(it_p_condition) )
         {
             OversetCondition3D * p_overset_condition = dynamic_cast<OversetCondition3D *> ((* it_p_condition).get());
-            if( p_overset_condition );
+            if( p_overset_condition )
                 mOversetCondition3Ds.push_back(* it_p_condition);
         }
+
+        std::cout<<__func__<<": size mOversetCondition3Ds: "<<mOversetCondition3Ds.size()<<std::endl;
 
         // Generate overset condition-to-element adjacency
         using NodeIdVector = std::vector<std::size_t>;
@@ -132,6 +134,8 @@ public:
             }
         }
 
+        std::cout<<__func__<<": size face_to_element_map: "<<face_to_element_map.size()<<std::endl;
+        
 
         //loop over overset overset conditions
         for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetCondition3Ds.ptr_begin(); it_p_condition != mOversetCondition3Ds.ptr_end(); it_p_condition = std::next(it_p_condition) )
@@ -148,7 +152,7 @@ public:
             if( it == face_to_element_map.end() )
             {
                 //throw error please
-                std::cout<<__func__<<"wrong!"<<std::endl;
+                std::cout<<__func__<<": wrong! not found"<<std::endl;
                 exit(EXIT_FAILURE);
             }
 
@@ -157,7 +161,7 @@ public:
             if ( ! p_overset_condition )
             {
                 //throw error please
-                std::cout<<__func__<<"wrong!"<<std::endl;
+                std::cout<<__func__<<": wrong! not OversetCondition3D"<<std::endl;
                 exit(EXIT_FAILURE);
             }
 

@@ -25,8 +25,6 @@
 namespace Kratos
 {
 	KRATOS_CREATE_VARIABLE(double, POINT_HEAT_SOURCE) // the other variables  needed in this app dont need to be created since they're already included in the kernel  ( CONDUCTIVITY and TEMPERATURE)
-	KRATOS_CREATE_VARIABLE(double, BLOCK_ID) // the other variables  needed in this app dont need to be created since they're already included in the kernel  ( CONDUCTIVITY and TEMPERATURE)
-
 
  	KratosPureDiffusionApplication::KratosPureDiffusionApplication(): //constructor  do not forget to add the ":" 
 		mPoisson2D    ( 0, Element::GeometryType::Pointer( new Triangle2D3<Node<3> >( Element::GeometryType::PointsArrayType (3) ) ) ),
@@ -45,7 +43,6 @@ namespace Kratos
 		std::cout << "Initializing KratosPureDiffusionApplication... " << std::endl;
 
 		KRATOS_REGISTER_VARIABLE(  POINT_HEAT_SOURCE )
-		KRATOS_REGISTER_VARIABLE(  BLOCK_ID )
 
 		// Registering elements and conditions here
 		KRATOS_REGISTER_ELEMENT("Poisson2D", mPoisson2D)  //and here is our element
