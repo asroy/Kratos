@@ -8,7 +8,7 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/external_includes )
 ## generate variables with the sources
 set( KRATOS_OVERSET_APPLICATION_SOURCES     
 	${CMAKE_CURRENT_SOURCE_DIR}/overset_application.cpp 
-
+	${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/OversetCondition3D.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/overset_python_application.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_overset_utilities_to_python.cpp
 )
@@ -19,7 +19,7 @@ find_library(SplitTreeSearch_LIBRARY SplitTreeSearch ${SplitTreeSearch_DIR}/lib)
 if(SplitTreeSearch_LIBRARY STREQUAL "SplitTreeSearch_LIBRARY-NOTFOUND")
   	message (FATAL_ERROR "SplitTreeSearch library not found")
 else(SplitTreeSearch_LIBRARY STREQUAL "SplitTreeSearch_LIBRARY-NOTFOUND")
-	message("-- Found SplitTreeSearch: " ${SplitTreeSearch_LIBRARY})
+	message ("-- Found SplitTreeSearch: " ${SplitTreeSearch_LIBRARY})
 endif(SplitTreeSearch_LIBRARY STREQUAL "SplitTreeSearch_LIBRARY-NOTFOUND")
 
 ###############################################################

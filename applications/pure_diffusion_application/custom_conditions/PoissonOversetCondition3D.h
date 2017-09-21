@@ -1,0 +1,69 @@
+//    |  /           |
+//    ' /   __| _` | __|  _ \   __|
+//    . \  |   (   | |   (   |\__ \.
+//   _|\_\_|  \__,_|\__|\___/ ____/
+//                   Multi-Physics
+//
+//  License:         BSD License
+//  Kratos default license: kratos/license.txt
+//
+//  Main authors:    YOUR_NAME_HERE
+//
+
+#if !defined(KRATOS_PoissonOverset3D_CONDITION_H_INCLUDED )
+#define  KRATOS_PoissonOverset3D_CONDITION_H_INCLUDED
+
+// External includes 
+#include "boost/smart_ptr.hpp"
+
+// Project includes
+#include "includes/define.h"
+#include "includes/serializer.h"
+#include "includes/condition.h"
+#include "includes/ublas_interface.h"
+#include "includes/variables.h"
+
+#include "overset_application/custom_conditions/OversetCondition3D.h"
+
+
+namespace Kratos
+{
+class PoissonOversetCondition3D : public OversetCondition3D
+{
+public:
+    ///@name Type Definitions
+    ///@{
+    
+    /// Counted pointer of PointSource3D
+    KRATOS_CLASS_POINTER_DEFINITION(PoissonOversetCondition3D);
+    
+    PoissonOversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry);
+
+    PoissonOversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties);
+
+    ~PoissonOversetCondition3D() override;
+
+    Condition::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes,  PropertiesType::Pointer pProperties) const override;
+
+    void CalculateLocalSystem(MatrixType& rLeftHandSideMatrix, VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo) override;
+    
+    void CalculateRightHandSide(VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo) override;
+
+    void EquationIdVector(EquationIdVectorType& rResult, ProcessInfo& rCurrentProcessInfo) override;
+
+    void GetDofList(DofsVectorType& ConditionalDofList,ProcessInfo& CurrentProcessInfo) override;
+ 
+protected:
+	//default constructor necessary for serialization  
+    PoissonOversetCondition3D() 
+        :   OversetCondition3D()
+    {}
+
+private:
+    
+friend class Serializer;
+
+};
+
+}//namespace Kratos 
+#endif

@@ -112,6 +112,8 @@ public:
 
         const ModelPart::ElementsContainerType & r_elements_pointer = const_cast<ModelPart &>(mrModelPart).Elements();
         
+        std::size_t num_face = 0;
+
         for( ModelPart::ElementsContainerType::ptr_const_iterator it_p_element = r_elements_pointer.ptr_begin(); it_p_element != r_elements_pointer.ptr_end(); it_p_element = std::next(it_p_element) )
         {
             const Element::GeometryType::GeometriesArrayType faces = (* it_p_element)->GetGeometry().Faces();
@@ -131,9 +133,14 @@ public:
                     face_to_element_map[nodes_id] = {(* it_p_element),i};
                 else
                     face_to_element_map.erase(it);
+
+                num_face++;
+
+                std::cout<<__func__<<": nodes_id: "<<nodes_id<<std::endl;
             }
         }
 
+        std::cout<<__func__<<": num_face: "<<num_face<<std::endl;
         std::cout<<__func__<<": size face_to_element_map: "<<face_to_element_map.size()<<std::endl;
         
 

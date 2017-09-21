@@ -11,19 +11,16 @@
 //
 // Project includes 
 #include "includes/define.h"
-#include "custom_elements/poisson_3d.h"
-#include "pure_diffusion_application.h"
 #include "utilities/math_utils.h"
 #include "utilities/geometry_utilities.h" 
 
+#include "custom_elements/PoissonElement3D.h"
+
 namespace Kratos
 {
-	
-
-
 	//************************************************************************************
 	//************************************************************************************
-	Poisson3D::Poisson3D(IndexType NewId, GeometryType::Pointer pGeometry)
+	PoissonElement3D::PoissonElement3D(IndexType NewId, GeometryType::Pointer pGeometry)
 		: Element(NewId, pGeometry)
 	{		
 		//DO NOT ADD DOFS HERE!!!
@@ -31,24 +28,24 @@ namespace Kratos
 
 	//************************************************************************************
 	//************************************************************************************
-	Poisson3D::Poisson3D(IndexType NewId, GeometryType::Pointer pGeometry,  PropertiesType::Pointer pProperties)
+	PoissonElement3D::PoissonElement3D(IndexType NewId, GeometryType::Pointer pGeometry,  PropertiesType::Pointer pProperties)
 		: Element(NewId, pGeometry, pProperties)
 	{
 
 	}
 
-	Element::Pointer Poisson3D::Create(IndexType NewId, NodesArrayType const& ThisNodes,  PropertiesType::Pointer pProperties) const
+	Element::Pointer PoissonElement3D::Create(IndexType NewId, NodesArrayType const& ThisNodes,  PropertiesType::Pointer pProperties) const
 	{
-		return Element::Pointer(new Poisson3D(NewId, GetGeometry().Create(ThisNodes), pProperties));
+		return Element::Pointer(new PoissonElement3D(NewId, GetGeometry().Create(ThisNodes), pProperties));
 	}
 
-	Poisson3D::~Poisson3D()
+	PoissonElement3D::~PoissonElement3D()
 	{
 	}
 
 	//************************************************************************************
 	//************************************************************************************
-	void Poisson3D::CalculateLocalSystem(MatrixType& rLeftHandSideMatrix, VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo)
+	void PoissonElement3D::CalculateLocalSystem(MatrixType& rLeftHandSideMatrix, VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo)
 	{
 		KRATOS_TRY
 
@@ -95,7 +92,7 @@ namespace Kratos
 
 	//************************************************************************************
 	//************************************************************************************
-	void Poisson3D::CalculateRightHandSide(VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo)
+	void PoissonElement3D::CalculateRightHandSide(VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo)
 	{
 		KRATOS_THROW_ERROR(std::logic_error,  "method not implemented" , "");
 	}	 
@@ -104,7 +101,7 @@ namespace Kratos
 	//************************************************************************************
 	// this subroutine calculates the nodal contributions for the explicit steps of the 
 	// fractional step procedure
-	void Poisson3D::InitializeSolutionStep(ProcessInfo& CurrentProcessInfo)
+	void PoissonElement3D::InitializeSolutionStep(ProcessInfo& CurrentProcessInfo)
 	{
 		KRATOS_TRY
 
@@ -113,7 +110,7 @@ namespace Kratos
 
 	//************************************************************************************
 	//************************************************************************************
-	void Poisson3D::EquationIdVector(EquationIdVectorType& rResult, ProcessInfo& CurrentProcessInfo)
+	void PoissonElement3D::EquationIdVector(EquationIdVectorType& rResult, ProcessInfo& CurrentProcessInfo)
 	{
 		unsigned int number_of_nodes = GetGeometry().PointsNumber();
 		if(rResult.size() != number_of_nodes)
@@ -125,7 +122,7 @@ namespace Kratos
 
 	//************************************************************************************
 	//************************************************************************************
-	  void Poisson3D::GetDofList(DofsVectorType& ElementalDofList,ProcessInfo& CurrentProcessInfo)
+	  void PoissonElement3D::GetDofList(DofsVectorType& ElementalDofList,ProcessInfo& CurrentProcessInfo)
 	{
 		unsigned int number_of_nodes = GetGeometry().PointsNumber();
 		if(ElementalDofList.size() != number_of_nodes)

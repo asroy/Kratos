@@ -10,8 +10,8 @@
 //  Main authors:    YOUR_NAME_HERE
 //
 
-#if !defined(KRATOS_PoissonOverset2D_CONDITION_H_INCLUDED )
-#define  KRATOS_PoissonOverset2D_CONDITION_H_INCLUDED
+#if !defined(KRATOS_PointSource_3D_CONDITION_H_INCLUDED )
+#define  KRATOS_PointSource_3D_CONDITION_H_INCLUDED
 
 // External includes 
 #include "boost/smart_ptr.hpp"
@@ -25,40 +25,38 @@
 
 namespace Kratos
 {
-class PoissonOverset2D : public Condition
+class PointSourceCondition3D
+: public Condition
 {
 public:
     ///@name Type Definitions
     ///@{
-    
-    /// Counted pointer of PointSource2D
-    KRATOS_CLASS_POINTER_DEFINITION(PoissonOverset2D);
-    
+
+    KRATOS_CLASS_POINTER_DEFINITION(PointSourceCondition3D);
+
     /// Default constructor. 
-    PoissonOverset2D(IndexType NewId, GeometryType::Pointer pGeometry);
+    PointSourceCondition3D(IndexType NewId, GeometryType::Pointer pGeometry);
 
-    PoissonOverset2D(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties);
+    PointSourceCondition3D(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties);
 
-    ~PoissonOverset2D() override;
+    /// Destructor.
+    virtual ~PointSourceCondition3D();
 
     Condition::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes,  PropertiesType::Pointer pProperties) const override;
 
     void CalculateLocalSystem(MatrixType& rLeftHandSideMatrix, VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo) override;
-    
+
     void CalculateRightHandSide(VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo) override;
 
-    //virtual void CalculateLeftHandSide(MatrixType& rLeftHandSideMatrix, ProcessInfo& rCurrentProcessInfo);
-    
+    //virtual void CalculateLeftHandSide(MatrixType& rLeftHandSideMatrix, ProcessInfo& rCurrentProcessInfo) override;
+
     void EquationIdVector(EquationIdVectorType& rResult, ProcessInfo& rCurrentProcessInfo) override;
 
     void GetDofList(DofsVectorType& ConditionalDofList,ProcessInfo& CurrentProcessInfo) override;
 
-protected:
-
- 
 private:
-	// A private default constructor necessary for serialization  
-    PoissonOverset2D() 
+    // A private default constructor necessary for serialization  
+    PointSourceCondition3D() 
     :   Condition()
     {}
 
@@ -66,5 +64,5 @@ friend class Serializer;
 
 };
 
-} //namespace kratos 
+}//namespace Kratos 
 #endif

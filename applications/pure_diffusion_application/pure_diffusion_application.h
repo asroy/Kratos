@@ -23,14 +23,12 @@
 #include "includes/define.h"
 #include "includes/kratos_application.h"
 #include "includes/variables.h"
-#include "custom_elements/poisson_2d.h" //including the file for the element
-#include "custom_elements/poisson_3d.h"
-#include "includes/condition.h"         //we'll also need conditions for the point heat loads
-#include "custom_conditions/pointsource_2d.h"
-#include "custom_conditions/pointsource_3d.h"
-#include "custom_conditions/poisson_overset_2d.h"
-#include "custom_conditions/poisson_overset_3d.h"
+#include "includes/condition.h"
 #include "includes/ublas_interface.h"
+
+#include "custom_elements/PoissonElement3D.h"
+#include "custom_conditions/PointSourceCondition3D.h"
+#include "custom_conditions/PoissonOversetCondition3D.h"
 
 
 namespace Kratos
@@ -102,17 +100,12 @@ namespace Kratos
 
 	private:
 
- 		const Poisson2D  mPoisson2D; //and here is our element.
-		const PointSource2D  mPointSource2D; //and our condition
-		const PoissonOverset2D  mPoissonOverset2D; //and our condition
-
- 		const Poisson3D  mPoisson3D; //and here is our element.
-		const PointSource3D  mPointSource3D; //and our condition
-		const PoissonOverset3D  mPoissonOverset3D; //and our condition
+ 		const PoissonElement3D  mPoissonElement3D;
+		const PointSourceCondition3D  mPointSourceCondition3D;
+		const PoissonOversetCondition3D  mPoissonOversetCondition3D;
 		
 		/// Assignment operator.
 		KratosPureDiffusionApplication& operator=(KratosPureDiffusionApplication  const& rOther);
-
 
 		/// Copy constructor.
 		KratosPureDiffusionApplication(KratosPureDiffusionApplication const& rOther);

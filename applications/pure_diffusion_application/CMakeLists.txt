@@ -3,24 +3,22 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 message("**** configuring KratosPureDiffusionApplication ****")
 
 include_directories( ${CMAKE_SOURCE_DIR}/kratos )
+include_directories( ${CMAKE_SOURCE_DIR}/applications )
 
 ## generate variables with the sources
 set( KRATOS_PUREDIFFUSION_APPLICATION_SOURCES     
 	${CMAKE_CURRENT_SOURCE_DIR}/pure_diffusion_application.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/pure_diffusion_python_application.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_utilities_to_python.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/poisson_2d.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/pointsource_2d.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/poisson_overset_2d.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/poisson_3d.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/pointsource_3d.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/poisson_overset_3d.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/PoissonElement3D.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/PointSourceCondition3D.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/PoissonOversetCondition3D.cpp
 )
 
 ###############################################################
 ## define library Kratos which defines the basic python interface
 add_library(KratosPureDiffusionApplication SHARED ${KRATOS_PUREDIFFUSION_APPLICATION_SOURCES})
-target_link_libraries(KratosPureDiffusionApplication KratosCore )
+target_link_libraries(KratosPureDiffusionApplication KratosCore KratosOversetApplication)
 set_target_properties(KratosPureDiffusionApplication PROPERTIES PREFIX "")
 install(TARGETS KratosPureDiffusionApplication DESTINATION libs )
 
