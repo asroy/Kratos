@@ -87,6 +87,8 @@ public:
 
                     if( a_node_id < b_node_id )
                         return true;
+                    else
+                        return false;
 
                     it_a = std::next(it_a);
                     it_b = std::next(it_b);
@@ -136,7 +138,8 @@ public:
 
                 num_face++;
 
-                std::cout<<__func__<<": nodes_id: "<<nodes_id<<std::endl;
+                DistributedAssignment::DataUtility::DataPrinter printer;
+                printer.Print(nodes_id);
             }
         }
 
