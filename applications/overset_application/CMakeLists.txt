@@ -13,10 +13,13 @@ set( KRATOS_OVERSET_APPLICATION_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_overset_utilities_to_python.cpp
 )
 
+#find SplitTreeSearch library
+find_library(SplitTreeSearch_LIBRARY SplitTreeSearch ${SplitTreeSearch_DIR}/lib)
+
 ###############################################################
 ## define library Kratos which defines the basic python interface
 add_library(KratosOversetApplication SHARED ${KRATOS_OVERSET_APPLICATION_SOURCES})
-target_link_libraries(KratosOversetApplication KratosCore )
+target_link_libraries(KratosOversetApplication KratosCore ${MPI_LIBRARIES} ${SplitTreeSearch_LIBRARY})
 set_target_properties(KratosOversetApplication PROPERTIES PREFIX "")
 install(TARGETS KratosOversetApplication DESTINATION libs )
 

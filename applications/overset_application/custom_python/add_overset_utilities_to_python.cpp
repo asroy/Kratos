@@ -69,13 +69,12 @@ namespace Kratos
 {
 namespace Python
 {
-
 	void  AddOversetUtilitiesToPython()
 	{
 		using namespace boost::python;
-
+		
 		class_<OversetAssembly::OversetAssembler, boost::noncopyable> ("OversetAssembler", init<const ModelPart &>())
-			.def("GenerateHinges", &OversetAssembly::OversetAssembler);
+			.def("GenerateHinges", &OversetAssembly::OversetAssembler::GenerateHinges);
 
 	}
 
