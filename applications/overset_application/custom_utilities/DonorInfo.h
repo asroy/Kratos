@@ -8,7 +8,7 @@ namespace OversetAssembly
 
 struct DonorInfo
 {
-    std::vector<std::size_t> mDonorNodesEquationId;
+    std::vector<std::size_t> mDonorNodesId;
     double mBarycentricCoordinate[3];
 };
 

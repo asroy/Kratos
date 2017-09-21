@@ -5,8 +5,9 @@
 #include "boost/smart_ptr.hpp"
 
 // Project includes
-#include "PointSearchMethod.h"
-#include "SteSearcher.h"
+#include "custom_conditions/OversetCondition3D.h"
+#include "custom_utilities/PointSearchMethodTemp.h"
+#include "custom_utilities/SteSearcher.h"
 
 
 namespace Kratos
@@ -20,20 +21,17 @@ class OversetAssembler
 
 public:
     using OversetCommunicator = DistributedAssignment::Communication::MpiCommunicator;
-    using PointSearchMethod = PointSearchMethod<SteSearcher>;
-    using OversetConditionContainer = PointerVectorSet<OversetCondition, IndexedObject> ;
+    using PointSearchMethod = PointSearchMethodTemp<SteSearcher>;
 
     OversetAssembler() = delete;
     
     OversetAssembler(const ModelPart & r_model_part)
         :   mrModelPart{r_model_part},
             mOversetCommunicator(),
-            mOversetConditions(),
-            mpPointSearchMethod{nullptr}
+            mpPointSearchMethod{new PointSearchMethod{mOversetCommunicator,mrModelPart}},
+            mOversetCondition3Ds()
     {
         GetOversetConditionsFromInputModelPart();
-        
-        mpPointSearchMethod = new PointSearchMethod{mOversetCommunicator,mrModelPart};
     }
 
     ~OversetAssembler()
@@ -44,43 +42,46 @@ public:
     void GetOversetConditionsFromInputModelPart()
     {
         // find out default overset condition
-        mOversetConditions.clear();
+        mOversetCondition3Ds.clear();
 
-        for( auto p_condition : mrModelPart.GetMesh().Conditions() )
+        //have to cast away const of ModelPart here, because Conditions() is non const;
+        const ModelPart::ConditionsContainerType & r_conditions_pointer = const_cast<ModelPart &>(mrModelPart).Conditions();
+
+        for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = r_conditions_pointer.ptr_begin(); it_p_condition != r_conditions_pointer.ptr_end(); it_p_condition = std::next(it_p_condition) )
         {
-            OversetCondition * p_overset_condition = dynamic_cast<OversetCondition *> p_condition.get();
+            OversetCondition3D * p_overset_condition = dynamic_cast<OversetCondition3D *> ((* it_p_condition).get());
             if( p_overset_condition );
-                mOversetConditions.push_back(p_condition);
+                mOversetCondition3Ds.push_back(* it_p_condition);
         }
 
         // Generate overset condition-to-element adjacency
-        using NodeIdVector = std::vector<int>;
+        using NodeIdVector = std::vector<std::size_t>;
 
         struct LessThanComparator
         {
-            bool operator() ( const NodeIdVector & a_vector, const NodeIdVector & b_vector ) const
+            bool operator() ( const NodeIdVector & r_a_vector, const NodeIdVector & r_b_vector ) const
             {
-                if( a_vector.size() < b_vector.size() )
+                if( r_a_vector.size() < r_b_vector.size() )
                     return true;
-                else if( a_vector.size() > b_vector.size() )
+                else if( r_a_vector.size() > r_b_vector.size() )
                     return false;
 
-                std::set<int> a_set;
-                std::set<int> b_set;
+                std::set<std::size_t> a_set;
+                std::set<std::size_t> b_set;
     
-                for( auto & a : a_vector )
+                for( const std::size_t & a : r_a_vector )
                     a_set.insert(a);
 
-                for( auto & b : b_vector )
+                for( const std::size_t & b : r_b_vector )
                     b_set.insert(b);
 
-                auto it_a = a_set.begin();
-                auto it_b = b_set.begin();
+                std::set<std::size_t>::const_iterator it_a = a_set.begin();
+                std::set<std::size_t>::const_iterator it_b = b_set.begin();
 
                 while( it_a != a_set.end() )
                 {
-                    int a_node_id = *it_a;
-                    int b_node_id = *it_b;
+                    std::size_t a_node_id = *it_a;
+                    std::size_t b_node_id = *it_b;
 
                     if( a_node_id < b_node_id )
                         return true;
@@ -95,8 +96,8 @@ public:
 
         struct ElementAndSide
         {
-            Element::Pointer mpElement;
-            int mElementSide;
+            Element::WeakPointer mpElement;
+            std::size_t mElementSide;
         };
 
         using ConditionToElement = std::map<NodeIdVector,ElementAndSide,LessThanComparator>;
@@ -105,68 +106,90 @@ public:
         //find key={condition_nodes} in map,
         //if not exsit, add {key={condition_nodes}, VALUE=ElementAndSide{element *, side}} into the map,
         //if already exist, delete the exisitng entry from the map
-        ConditionToElement condition_to_element_map;
+        ConditionToElement face_to_element_map;
 
-        auto & r_elements_pointer = mrModelPart.GetMesh().Elements();
-
-        for( auto & rp_element : r_elements_pointer )
+        const ModelPart::ElementsContainerType & r_elements_pointer = const_cast<ModelPart &>(mrModelPart).Elements();
+        
+        for( ModelPart::ElementsContainerType::ptr_const_iterator it_p_element = r_elements_pointer.ptr_begin(); it_p_element != r_elements_pointer.ptr_end(); it_p_element = std::next(it_p_element) )
         {
-            conditions = rp_element->conditions();
+            const Element::GeometryType::GeometriesArrayType faces = (* it_p_element)->GetGeometry().Faces();
 
-            for( int i = 0; it < conditions.size(); i++ )
+            for( std::size_t i = 0; i < faces.size(); i++ )
             {
-                nodes = conditions[i];
+                const Element::GeometryType & r_nodes = faces[i];
 
-                NodeIdVector nodes_id(nodes.size());
+                NodeIdVector nodes_id(r_nodes.size());
 
-                for( int j = 0; j < nodes.size(); j++ )
-                    nodes_id[j] = nodes[j].GetEquationId();
+                for( std::size_t j = 0; j < r_nodes.size(); j++ )
+                    nodes_id[j] = r_nodes[j].GetId();
 
-                auto it = condition_to_element_map.find(nodes_id);
+                ConditionToElement::const_iterator it = face_to_element_map.find(nodes_id);
 
-                if( it == condition_to_element_map.end() )
-                    condition_to_element_map[nodes_id] = {rp_element,i};
+                if( it == face_to_element_map.end() )
+                    face_to_element_map[nodes_id] = {(* it_p_element),i};
                 else
-                    condition_to_element_map.erase(it);
+                    face_to_element_map.erase(it);
             }
         }
 
 
-        //loop over overset conditions, search for condition_nodes
-        for( auto & rp_overset_condition : mOversetCondition )
+        //loop over overset overset conditions
+        for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetCondition3Ds.ptr_begin(); it_p_condition != mOversetCondition3Ds.ptr_end(); it_p_condition = std::next(it_p_condition) )
         {
-            auto & nodes = rp_overset_condition->Nodes();
+            const Condition::GeometryType & r_nodes = (* it_p_condition)->GetGeometry();
 
-            NodeIdVector nodes_id(nodes.size());
+            NodeIdVector nodes_id(r_nodes.size());
 
-            for( int i = 0; i < nodes.size(); i++ )
-                nodes_id[i] = nodes[i].GetEquationId();
+            for( std::size_t i = 0; i < r_nodes.size(); i++ )
+                nodes_id[i] = r_nodes[i].GetId();
 
-            auto it = condition_to_element_map.find(nodes_id);
+            ConditionToElement::const_iterator it = face_to_element_map.find(nodes_id);
 
-            if( it == condition_to_element_map.end() )
+            if( it == face_to_element_map.end() )
             {
                 //throw error please
+                std::cout<<__func__<<"wrong!"<<std::endl;
+                exit(EXIT_FAILURE);
             }
 
-            rp_overset_condition->mpElement = it->second.mpElement;
-            rp_overset_condition->mElementSide = it->second.mElementSide;
+            OversetCondition3D * p_overset_condition = dynamic_cast<OversetCondition3D *> ((* it_p_condition).get());
+
+            if ( ! p_overset_condition )
+            {
+                //throw error please
+                std::cout<<__func__<<"wrong!"<<std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            p_overset_condition->SetAdjacentElementAndSide( it->second.mpElement, it->second.mElementSide );
         }
     }
 
-    const OversetConditionContainer & OversetConditions() const
-    { return mOversetConditions; }
+    const ModelPart::ConditionsContainerType & OversetCondition3Ds() const
+    { return mOversetCondition3Ds; }
 
     void GenerateHinges()
     {
-        for( auto & rp_overset_condition : mOversetConditions )
-            rp_overset_condition->GenerateHinges();
+        for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetCondition3Ds.ptr_begin(); it_p_condition != mOversetCondition3Ds.ptr_end(); it_p_condition = std::next(it_p_condition) )
+        {
+            OversetCondition3D * p_overset_condition = dynamic_cast<OversetCondition3D *> ((* it_p_condition).get());
+
+            if ( ! p_overset_condition )
+            {
+                //throw error please
+                std::cout<<__func__<<"wrong!"<<std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            p_overset_condition->GenerateHinges();
+        }
+        
     }
 
     // //overset connectivity
     // void GenerateHingeDonorRelation()
     // {
-    //     for( auto & rp_overset_condition : mOversetConditions )
+    //     for( auto & rp_overset_condition : mOversetCondition3Ds )
     //     {}
     // }
 
@@ -174,10 +197,10 @@ public:
     // {}
     
 private:
-    ModelPart & mrModelPart;
+    const ModelPart & mrModelPart;
     OversetCommunicator mOversetCommunicator;
-    OversetConditionContainer mOversetConditions;
-    PointSearchMethod<TPointSearcher> * mpPointSearchMethod;
+    PointSearchMethod * const mpPointSearchMethod;
+    ModelPart::ConditionsContainerType mOversetCondition3Ds;
 };
 
 }//namespace OverserAssembly

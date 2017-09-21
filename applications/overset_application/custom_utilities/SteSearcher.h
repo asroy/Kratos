@@ -31,36 +31,25 @@ public:
 
     SteSearcher
     ( 
-        const std::vector<double> & r_nodes_coordinate,
-        const std::vector<int> & r_elements_to_nodes,
-        const std::vector<std::size_t> & r_nodes_equation_id,
+        double * const p_crd,
+        int * const p_cnn,
+        const std::vector<std::size_t> local_id_to_node_id,
         const std::size_t num_node,
         const std::size_t num_element
     )
         :   mName(),
             mKey(),
-            mpCrd{new double [r_nodes_coordinate.size()]},
-            mpCnn{new int [r_elements_to_nodes.size()]},
+            mpCrd{p_crd},
+            mpCnn{p_cnn},
+            mNodesId{local_id_to_node_id},
             mNumNode{num_node},
             mNumElement{num_element},
-            mSteHandle{nullptr}
-    {
-        for(std::size_t i = 0; i < r_nodes_coordinate.size(); i++ )
-            mpCrd[i] = r_nodes_coordinate[i];
-
-        for(std::size_t i = 0; i < r_elements_to_nodes.size(); i++ )
-            mpCnn[i] = r_elements_to_nodes[i];
-
-        mSteHandle = SplitTreeSearch::steNew( mpCrd, mpCnn, PRM_TPL_4TET, mNumElement, SplitTreeSearch::TRUE );
-
-        mNodesEquationId.reserve(num_node);
-        for( std::size_t i = 0; i < num_node; i++ )
-            mNodesEquationId.push_back(r_nodes_equation_id[i]);
-    }
+            mSteHandle{SplitTreeSearch::steNew( mpCrd, mpCnn, PRM_TPL_4TET, mNumElement, SplitTreeSearch::TRUE )}
+    {}
 
     ~SteSearcher()
     {
-        SplitTreeSearch::steFree( mSteHandle );
+        SplitTreeSearch::steFree( mSteHandle );//mpCrd, mpCnn will be deleted
     }
 
     void SetName( const std::string & r_name )
@@ -75,54 +64,59 @@ public:
     SteSearcherKey Key() const
     { return mKey; }
 
-    static void BuildFromModelPart(const ModelPart & r_model_part, std::vector<SteSearcher *> & r_point_searchers_pointer)
+    static void BuildPointSearchersFromModelPart(const ModelPart & r_model_part, std::vector<SteSearcher *> & r_point_searchers_pointer)
     {
         r_point_searchers_pointer.clear();
 
         //generate cnn, crd
-        auto r_nodes = r_model_part.GetMesh().Nodes();
-        auto r_elements = r_model_part.GetMesh().Elements();
-
-        std::size_t num_node = r_nodes.size();
-        std::size_t num_element = r_elements.size();
+        std::size_t num_node = r_model_part.NumberOfNodes();
+        std::size_t num_element = r_model_part.NumberOfElements();
 
         double * p_crd = new double [3*num_node];
         int * p_cnn = new int [4*num_element];
-        std::vector<std::size_t> node_local_to_equation_id(num_node);
-        std::map<std::size_t,int> node_equation_to_local_id;
+        std::vector<std::size_t> local_id_to_node_id(num_node);
+        std::map<std::size_t,std::size_t> node_id_to_local_id;
 
         {
+            const ModelPart::NodesContainerType & r_nodes_pointer = const_cast<ModelPart &>(r_model_part).Nodes();
+
             std::size_t i = 0;
-            for( typename NodesArrayType::ptr_iterator it = r_model_part.GetMesh().Nodes().begin(); it ! = r_model_part.GetMesh().Nodes().end(); ++it )
+
+            for( ModelPart::NodesContainerType::ptr_const_iterator it_p_node = r_nodes_pointer.ptr_begin(); it_p_node != r_nodes_pointer.ptr_end(); it_p_node = std::next(it_p_node) )
             {
-                p_crd[3*i]   = r_node.X();
-                p_crd[3*i+1] = r_node.Y();
-                p_crd[3*i+2] = r_node.Z();
+                p_crd[3*i]   = (* it_p_node)->X();
+                p_crd[3*i+1] = (* it_p_node)->Y();
+                p_crd[3*i+2] = (* it_p_node)->Z();
                 i++;
 
-                std::size_t equation_id = r_node.GetEquationId();
+                std::size_t node_id = (* it_p_node)->GetId();
 
-                node_local_to_equation_id[i] = equation_id;
-                node_equation_to_local_id[equation_id] = i;
+                local_id_to_node_id[i] = node_id;
+                node_id_to_local_id[node_id] = i;
             }
         }
 
         {
+            const ModelPart::ElementsContainerType & r_elements_pointer = const_cast<ModelPart &>(r_model_part).Elements();
+            
             std::size_t i = 0;
-            for( auto & r_element : r_model_part.GetMesh().Elements() )
-            {
-                assert( r_element.Nodes().size() == 4 )
 
-                for( auto r_node : r_element.Nodes() )
+            for( ModelPart::ElementsContainerType::ptr_const_iterator it_p_element = r_elements_pointer.ptr_begin(); it_p_element != r_elements_pointer.ptr_end(); it_p_element = std::next(it_p_element) )
+            {
+                const Element::GeometryType & r_nodes_pointer = (* it_p_element)->GetGeometry();
+
+                assert( r_nodes_pointer.size() == 4 );
+
+                for( Element::GeometryType::ptr_const_iterator it_p_node = r_nodes_pointer.ptr_begin(); it_p_node != r_nodes_pointer.ptr_end(); it_p_node = std::next(it_p_node) )
                 {
-                    p_cnn[i] = node_equation_to_local_id[r_node.GetEquationId()];
+                    p_cnn[i] = node_id_to_local_id[(* it_p_node)->GetId()];
                     i++;
                 }
             }
         }
         
         //create SteSearcher
-        r_point_searchers_pointer.push_back(new SteSearcher( p_crd, p_ccn, node_local_to_equation_id, num_node, num_element ));
+        r_point_searchers_pointer.push_back(new SteSearcher( p_crd, p_cnn, local_id_to_node_id, num_node, num_element ));
     }
 
     void Execute( const Coordinate & r_coordinate, DonorInfo & r_donor_info )
@@ -133,11 +127,11 @@ public:
     
         int element_id = SplitTreeSearch::steFindElemNextHeap( mSteHandle, coordinate , barycentric_coordinate, & distance );
         
-        r_donor_info.mDonorNodesEquationId.clear();
-        r_donor_info.mDonorNodesEquationId.push_back( mNodesEquationId[mpCnn[4*element_id]] );
-        r_donor_info.mDonorNodesEquationId.push_back( mNodesEquationId[mpCnn[4*element_id+1]] );
-        r_donor_info.mDonorNodesEquationId.push_back( mNodesEquationId[mpCnn[4*element_id+2]] );
-        r_donor_info.mDonorNodesEquationId.push_back( mNodesEquationId[mpCnn[4*element_id+3]] );
+        r_donor_info.mDonorNodesId.clear();
+        r_donor_info.mDonorNodesId.push_back( mNodesId[mpCnn[4*element_id]] );
+        r_donor_info.mDonorNodesId.push_back( mNodesId[mpCnn[4*element_id+1]] );
+        r_donor_info.mDonorNodesId.push_back( mNodesId[mpCnn[4*element_id+2]] );
+        r_donor_info.mDonorNodesId.push_back( mNodesId[mpCnn[4*element_id+3]] );
 
         r_donor_info.mBarycentricCoordinate[0] = (double) barycentric_coordinate[0];
         r_donor_info.mBarycentricCoordinate[1] = (double) barycentric_coordinate[1];
@@ -161,11 +155,10 @@ private:
 
     SplitTreeSearch::Real * const mpCrd;
     SplitTreeSearch::Integer * const mpCnn;
+    const std::vector<std::size_t> mNodesId;
     const SplitTreeSearch::Integer mNumNode;
     const SplitTreeSearch::Integer mNumElement;
-    SplitTreeSearch::SteHd mSteHandle;
-    
-    std::vector<std::size_t> mNodesEquationId;
+    const SplitTreeSearch::SteHd mSteHandle;
     
     friend class DistributedAssignment::DataUtility::DataPrinter;
 };

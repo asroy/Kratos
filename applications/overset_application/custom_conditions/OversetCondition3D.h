@@ -57,20 +57,27 @@ public:
     {
         IntegrationPointsArrayType integration_points = pGetGeometry()->IntegrationPoints();
 
-        mHinges.clear();
-        mHinges.reserve(integration_points.size());
+        mHinge3Ds.clear();
+        mHinge3Ds.reserve(integration_points.size());
 
         for( const IntegrationPointType & r_integration_point : integration_points )
-            mHinges.push_back(Hinge3D{r_integration_point});
+            mHinge3Ds.push_back(Hinge3D{r_integration_point});
     }
 
-    const Element::Pointer pAdjacentElement()
+    const Element::WeakPointer pAdjacentElement() const
     { return mpAdjacentElement; }
+
+    void SetAdjacentElementAndSide( const Element::WeakPointer & rp_adjacent_element, const std::size_t element_side )
+    {
+        mpAdjacentElement = rp_adjacent_element;
+        mAdjacentElementSide = element_side;
+    }
 
 //member
 private:
-    std::vector<Hinge3D> mHinges;
-    Element::Pointer mpAdjacentElement;
+    std::vector<Hinge3D> mHinge3Ds;
+    Element::WeakPointer mpAdjacentElement;
+    std::size_t mAdjacentElementSide;
 
   	// A private default constructor necessary for serialization  
     OversetCondition3D()

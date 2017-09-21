@@ -1,6 +1,6 @@
 extern "C"
 {
-#include "mtxHeap.h"
-#include "ste.h"
-#include "steDim.h"
+#include "include_files/mtxHeap.h"
+#include "include_files/ste.h"
+#include "include_files/steDim.h"
 }

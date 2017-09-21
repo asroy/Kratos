@@ -57,12 +57,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // Project includes
 #include "includes/define.h"
 #include "processes/process.h"
-#include "custom_python/add_overset_utilities_to_python.h"
 
 #include "spaces/ublas_space.h"
 #include "linear_solvers/linear_solver.h"
 
-#include "custom_utilities/PointSearchMethod.h"
+#include "custom_python/add_overset_utilities_to_python.h"
+#include "custom_utilities/OversetAssembler.h"
 
 
 namespace Kratos
@@ -74,13 +74,8 @@ namespace Python
 	{
 		using namespace boost::python;
 
-		typedef UblasSpace<double, CompressedMatrix, Vector> SparseSpaceType;
-		typedef UblasSpace<double, Matrix, Vector> LocalSpaceType;
-		typedef LinearSolver<SparseSpaceType, LocalSpaceType > LinearSolverType;
-
-		class_<OversetAssembly::OversetAssembler, boost::noncopyable>
-		(	"OversetAssembler", init<const ModelPart &>() )
-			.def("GenerateHinges", & OversetAssembly::OversetAssembler);
+		class_<OversetAssembly::OversetAssembler, boost::noncopyable> ("OversetAssembler", init<const ModelPart &>())
+			.def("GenerateHinges", &OversetAssembly::OversetAssembler);
 
 	}
 

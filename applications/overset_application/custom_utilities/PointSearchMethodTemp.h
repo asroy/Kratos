@@ -9,10 +9,10 @@
 #include <unistd.h>
 #include <vector>
 
-#include "DistributedAssignment.h"
-#include "SteSearcher.h"
-#include "Coordinate.h"
-#include "DonorInfo.h"
+#include "custom_utilities/DistributedAssignment.h"
+#include "custom_utilities/SteSearcher.h"
+#include "custom_utilities/Coordinate.h"
+#include "custom_utilities/DonorInfo.h"
 
 namespace Kratos
 {
@@ -20,7 +20,7 @@ namespace OversetAssembly
 {
 
 template<typename TPointSearcher>
-class PointSearchMethod
+class PointSearchMethodTemp
 {
 private:
     using OversetCommunicator = DistributedAssignment::Communication::MpiCommunicator;
@@ -36,24 +36,24 @@ private:
     using PointSearchAssignmentManager = DistributedAssignment::DistributedAssignment::DistributedAssignmentManager<DummyContractor,TPointSearcher,Coordinate,DonorInfo,OversetCommunicator,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer>;
 
 public:
-    PointSearchMethod() = delete;
+    PointSearchMethodTemp() = delete;
 
-    PointSearchMethod( const OversetCommunicator & r_communicator, const ModelPart & r_model_part )
-        :   mrOverseTOversetCommunicator{r_communicator},
+    PointSearchMethodTemp( OversetCommunicator & r_communicator, const ModelPart & r_model_part )
+        :   mrOversetCommunicator{r_communicator},
             mpDummyAssignorManager{nullptr},
             mpPointSearcherManager{nullptr},
             mpPointSearchAssignmentManager{nullptr}
     {
         //dummy assignor
-        mpDummyAssignorManager = new DummyContractorManager{mrOverseTOversetCommunicator};
+        mpDummyAssignorManager = new DummyContractorManager{mrOversetCommunicator};
         mpDummyAssignorManager->RegisterLocalContractor( * (new DummyContractor()), "DummyContractor" );
         mpDummyAssignorManager->GenerateGlobalContractorsRegistry();
 
         //searcher
         std::vector<TPointSearcher *> local_point_searchers_pointer;
-        TPointSearcher::BuildPointSearchersFromModelPart(mrModelPart, local_point_searchers_pointer);
+        TPointSearcher::BuildPointSearchersFromModelPart(r_model_part, local_point_searchers_pointer);
 
-        mpPointSearcherManager = new PointSearcherManager{mrOverseTOversetCommunicator};
+        mpPointSearcherManager = new PointSearcherManager{mrOversetCommunicator};
         mpPointSearcherManager->RegisterLocalContractors( local_point_searchers_pointer, "SteSearcher" );
         mpPointSearcherManager->GenerateGlobalContractorsRegistry();
 
@@ -61,17 +61,17 @@ public:
         mpPointSearchAssignmentManager = new PointSearchAssignmentManager{r_communicator, *mpDummyAssignorManager, *mpPointSearcherManager};
     }
 
-    ~PointSearchMethod()
+    ~PointSearchMethodTemp()
     {
         //dummy assignor and manager
-        for( DummyContractor * p_dummy_assignor : mpDummyAssignorManager->LocalContractorsPointer() )
-            delete p_dummy_assignor;
+        for( typename DummyContractorManager::ContractorPointerPairByContractorKey & r_dummy_assignor_pair : mpDummyAssignorManager->LocalContractorsPointer() )
+            delete r_dummy_assignor_pair.second;
 
         delete mpDummyAssignorManager;
         
         //searchers and manager
-        for( TPointSearcher * p_searcher : mpPointSearcherManager->LocalContractorsPointer() )
-            delete p_searcher;
+        for( typename PointSearcherManager::ContractorPointerPairByContractorKey & r_searcher_pair : mpPointSearcherManager->LocalContractorsPointer() )
+            delete r_searcher_pair.second;
 
         delete mpPointSearcherManager;
 
@@ -100,7 +100,7 @@ public:
     }
 
 private:
-    OversetCommunicator & mrOverseTOversetCommunicator;
+    OversetCommunicator & mrOversetCommunicator;
     DummyContractorManager * mpDummyAssignorManager;
     PointSearcherManager * mpPointSearcherManager;
     PointSearchAssignmentManager * mpPointSearchAssignmentManager;

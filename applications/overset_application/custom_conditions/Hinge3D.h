@@ -47,7 +47,7 @@ private:
 
 //member
 private:
-    std::vector<std::size_t> mDonorNodesEquationIds;
+    std::vector<std::size_t> mDonorNodesId;
 
 friend class Serializer;
 };

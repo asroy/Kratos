@@ -20,6 +20,7 @@ public:
     using ContractorKeySet = std::set<ContractorKey, typename ContractorKey::LessThanComparator> ;
     using ContractorPointer = TContractorType * ;
     using ContractorPointerMapByContractorKey = std::map<ContractorKey, ContractorPointer, typename ContractorKey::LessThanComparator> ;
+    using ContractorPointerPairByContractorKey = std::pair<const ContractorKey, ContractorPointer>;
     using LocationMapByContractorKey = std::map<ContractorKey, Location, typename ContractorKey::LessThanComparator> ;
 
     DistributedContractorManager() = delete;
@@ -46,7 +47,7 @@ public:
 
     void RegisterLocalContractors( const std::vector<TContractorType *> & contractor_pointers, const std::string & r_name )
     {
-        for( const TContractorType * const p_contractor : contractor_pointers )
+        for( TContractorType * const p_contractor : contractor_pointers )
             RegisterLocalContractor(*p_contractor, r_name);
     }
 
@@ -160,6 +161,9 @@ public:
     { return mGlobalContractorsKey; }
 
     const ContractorPointerMapByContractorKey & LocalContractorsPointer() const
+    { return mLocalContractorsPointer; }
+
+    ContractorPointerMapByContractorKey & LocalContractorsPointer()
     { return mLocalContractorsPointer; }
 
     const LocationMapByContractorKey & GlobalContractorsLocation() const
