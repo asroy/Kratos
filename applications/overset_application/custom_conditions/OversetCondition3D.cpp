@@ -18,16 +18,25 @@
 #include "includes/serializer.h"
 #include "includes/variables.h"
 #include "includes/condition.h"
+#include "includes/ublas_interface.h"
 #include "custom_conditions/OversetCondition3D.h"
 
 namespace Kratos
 {
+//default protected constructor
+OversetCondition3D::OversetCondition3D(IndexType NewId)
+    :   Condition(NewId),
+        mIntegrationMethod{GetIntegrationMethod()}
+{}
+
 OversetCondition3D::OversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry)
-    :   Condition(NewId, pGeometry)
+    :   Condition(NewId, pGeometry),
+        mIntegrationMethod{GetIntegrationMethod()}
 {}
 
 OversetCondition3D::OversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties)
-    :   Condition(NewId, pGeometry, pProperties)
+    :   Condition(NewId, pGeometry, pProperties),
+        mIntegrationMethod{GetIntegrationMethod()}
 {}
 
 OversetCondition3D::~OversetCondition3D()
@@ -40,13 +49,36 @@ Condition::Pointer OversetCondition3D::Create(IndexType NewId, NodesArrayType co
 
 void OversetCondition3D::GenerateHinges()
 {
-    IntegrationPointsArrayType integration_points = pGetGeometry()->IntegrationPoints();
+    const IntegrationPointsArrayType & r_integration_points = GetGeometry().IntegrationPoints(mIntegrationMethod);
 
     mHinge3Ds.clear();
-    mHinge3Ds.reserve(integration_points.size());
+    mHinge3Ds.reserve(r_integration_points.size());
 
-    for( const IntegrationPointType & r_integration_point : integration_points )
+    for( const IntegrationPointType & r_integration_point : r_integration_points )
         mHinge3Ds.push_back(Hinge3D{r_integration_point});
+}
+
+const std::vector<Vector> OversetCondition3D::HingesGlobalCoordinate() const
+{
+    std::vector<Vector> r_coordinates;
+    Vector r_coordinate(3);
+    
+    const GeometryType & r_nodes = GetGeometry();
+
+    for( const Hinge3D & r_hinge : mHinge3Ds )
+    {
+        Vector Ns(r_nodes.size());
+
+        GetGeometry().ShapeFunctionsValues(Ns, r_hinge);
+
+        noalias(r_coordinate) = ZeroVector(3);
+        for(std::size_t i = 0; i < r_nodes.size(); i++ )
+            noalias(r_coordinate) += Ns[i]*r_nodes[i];
+
+        r_coordinates.push_back(r_coordinate);
+    }
+
+    return r_coordinates;
 }
 
 const std::vector<Hinge3D> & OversetCondition3D::Hinge3Ds() const

@@ -44,11 +44,13 @@ public:
 
     ~OversetCondition3D() override;
 
-    Condition::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes,  PropertiesType::Pointer pProperties) const override;
+    Condition::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes, PropertiesType::Pointer pProperties) const override;
 
     void GenerateHinges();
 
     const std::vector<Hinge3D> & Hinge3Ds() const;
+
+    const std::vector<Vector> HingesGlobalCoordinate() const;
 
     const Element::WeakPointer pAdjacentElement() const;
 
@@ -56,11 +58,10 @@ public:
 
 protected:
     //default constructor necessary for serialization  
-    OversetCondition3D()
-        :   Condition()
-    {}
+    OversetCondition3D(IndexType NewId = 0);
 
 private:
+    IntegrationMethod mIntegrationMethod;
     std::vector<Hinge3D> mHinge3Ds;
     Element::WeakPointer mpAdjacentElement;
     std::size_t mAdjacentElementSide;

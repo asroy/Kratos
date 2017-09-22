@@ -186,7 +186,7 @@ public:
             if ( ! p_overset_condition )
             {
                 //throw error please
-                std::cout<<__func__<<"wrong! not OversetCondition3D*"<<std::endl;
+                std::cout<<__func__<<"wrong! not OversetCondition3D *"<<std::endl;
                 exit(EXIT_FAILURE);
             }
 
@@ -201,6 +201,8 @@ public:
 
     void GenerateHingeDonorRelation()
     {
+        std::vector<std::vector<Vector>> conditions_hinges_coordinate;
+
         for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetCondition3Ds.ptr_begin(); it_p_condition != mOversetCondition3Ds.ptr_end(); it_p_condition = std::next(it_p_condition) )
         {
             OversetCondition3D * p_overset_condition = dynamic_cast<OversetCondition3D *> ((* it_p_condition).get());
@@ -208,17 +210,16 @@ public:
             if ( ! p_overset_condition )
             {
                 //throw error please
-                std::cout<<__func__<<"wrong! not OversetCondition3D*"<<std::endl;
+                std::cout<<__func__<<"wrong! not OversetCondition3D *"<<std::endl;
                 exit(EXIT_FAILURE);
             }
 
-            const std::vector<Hinge3D> & r_hinges = p_overset_condition->Hinge3Ds();
-
-            for( const Hinge3D & r_hinge : r_hinges )
-            {
-                printf("%s: (%g, %g, %g)\n", __func__, r_hinge.X(), r_hinge.Y(), r_hinge.Z());
-            }
+            conditions_hinges_coordinate.push_back( p_overset_condition->HingesGlobalCoordinate() );
         }
+
+        for( const auto & r_condition_hinges_coordindate : conditions_hinges_coordinate )
+            for( const auto & r_hinge_coordidate : r_condition_hinges_coordindate )
+                std::cout<<__func__<< ": coordinate "<< r_hinge_coordidate <<std::endl;
     }
 
     // void GetHingesValues()
