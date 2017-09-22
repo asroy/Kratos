@@ -48,6 +48,8 @@ public:
 
     void GenerateHinges();
 
+    const std::vector<Hinge3D> & Hinge3Ds() const;
+
     const Element::WeakPointer pAdjacentElement() const;
 
     void SetAdjacentElementAndSide( const Element::WeakPointer & rp_adjacent_element, const std::size_t element_side );

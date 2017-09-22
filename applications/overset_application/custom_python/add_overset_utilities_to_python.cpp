@@ -74,7 +74,8 @@ namespace Python
 		using namespace boost::python;
 		
 		class_<OversetAssembly::OversetAssembler, boost::noncopyable> ("OversetAssembler", init<const ModelPart &>())
-			.def("GenerateHinges", &OversetAssembly::OversetAssembler::GenerateHinges);
+			.def("GenerateHinges", &OversetAssembly::OversetAssembler::GenerateHinges)
+			.def("GenerateHingeDonorRelation", &OversetAssembly::OversetAssembler::GenerateHingeDonorRelation);
 
 	}
 

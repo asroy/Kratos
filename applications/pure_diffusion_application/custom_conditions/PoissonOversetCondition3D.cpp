@@ -55,7 +55,7 @@ void PoissonOversetCondition3D::CalculateRightHandSide(VectorType& rRightHandSid
 
 	rRightHandSideVector = ZeroVector(matSize);
 
-	std::cout << __func__ <<"not implemented" << std::endl;
+	// std::cout << __func__ <<"not implemented" << std::endl;
 
 	KRATOS_CATCH("")
 }
@@ -78,7 +78,8 @@ void PoissonOversetCondition3D::CalculateLocalSystem(MatrixType& rLeftHandSideMa
 
 	rRightHandSideVector = ZeroVector(matSize);
 
-	std::cout << __func__ <<"not implemented" << std::endl;
+	// std::cout << __func__ <<"not implemented" << std::endl;
+	
 	KRATOS_CATCH("")
 }
 

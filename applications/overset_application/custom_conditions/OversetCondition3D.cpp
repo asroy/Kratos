@@ -22,40 +22,43 @@
 
 namespace Kratos
 {
-    OversetCondition3D::OversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry)
-        :   Condition(NewId, pGeometry)
-    {}
+OversetCondition3D::OversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry)
+    :   Condition(NewId, pGeometry)
+{}
 
-    OversetCondition3D::OversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties)
-        :   Condition(NewId, pGeometry, pProperties)
-    {}
+OversetCondition3D::OversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties)
+    :   Condition(NewId, pGeometry, pProperties)
+{}
 
-    OversetCondition3D::~OversetCondition3D()
-    {}
+OversetCondition3D::~OversetCondition3D()
+{}
 
-    Condition::Pointer OversetCondition3D::Create(IndexType NewId, NodesArrayType const& ThisNodes,  PropertiesType::Pointer pProperties) const
-    {
-        return Condition::Pointer(new OversetCondition3D(NewId, GetGeometry().Create(ThisNodes), pProperties));
-    }
+Condition::Pointer OversetCondition3D::Create(IndexType NewId, NodesArrayType const& ThisNodes,  PropertiesType::Pointer pProperties) const
+{
+    return Condition::Pointer(new OversetCondition3D(NewId, GetGeometry().Create(ThisNodes), pProperties));
+}
 
-    void OversetCondition3D::GenerateHinges()
-    {
-        IntegrationPointsArrayType integration_points = pGetGeometry()->IntegrationPoints();
+void OversetCondition3D::GenerateHinges()
+{
+    IntegrationPointsArrayType integration_points = pGetGeometry()->IntegrationPoints();
 
-        mHinge3Ds.clear();
-        mHinge3Ds.reserve(integration_points.size());
+    mHinge3Ds.clear();
+    mHinge3Ds.reserve(integration_points.size());
 
-        for( const IntegrationPointType & r_integration_point : integration_points )
-            mHinge3Ds.push_back(Hinge3D{r_integration_point});
-    }
+    for( const IntegrationPointType & r_integration_point : integration_points )
+        mHinge3Ds.push_back(Hinge3D{r_integration_point});
+}
 
-    const Element::WeakPointer OversetCondition3D::pAdjacentElement() const
-    { return mpAdjacentElement; }
+const std::vector<Hinge3D> & OversetCondition3D::Hinge3Ds() const
+{ return mHinge3Ds; }
 
-    void OversetCondition3D::SetAdjacentElementAndSide( const Element::WeakPointer & rp_adjacent_element, const std::size_t element_side )
-    {
-        mpAdjacentElement = rp_adjacent_element;
-        mAdjacentElementSide = element_side;
-    }
+const Element::WeakPointer OversetCondition3D::pAdjacentElement() const
+{ return mpAdjacentElement; }
+
+void OversetCondition3D::SetAdjacentElementAndSide( const Element::WeakPointer & rp_adjacent_element, const std::size_t element_side )
+{
+    mpAdjacentElement = rp_adjacent_element;
+    mAdjacentElementSide = element_side;
+}
 
 }//namespace Kratos 

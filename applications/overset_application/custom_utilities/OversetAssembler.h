@@ -176,6 +176,9 @@ public:
 
     void GenerateHinges()
     {
+        std::size_t num_overset_condition = 0;
+        std::size_t num_hinge = 0;
+
         for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetCondition3Ds.ptr_begin(); it_p_condition != mOversetCondition3Ds.ptr_end(); it_p_condition = std::next(it_p_condition) )
         {
             OversetCondition3D * p_overset_condition = dynamic_cast<OversetCondition3D *> ((* it_p_condition).get());
@@ -183,21 +186,40 @@ public:
             if ( ! p_overset_condition )
             {
                 //throw error please
-                std::cout<<__func__<<"wrong!"<<std::endl;
+                std::cout<<__func__<<"wrong! not OversetCondition3D*"<<std::endl;
                 exit(EXIT_FAILURE);
             }
 
             p_overset_condition->GenerateHinges();
+
+            num_overset_condition++;
+            num_hinge += p_overset_condition->Hinge3Ds().size();
         }
-        
+
+        std::cout<<__func__<<": num_overset_condition "<<num_overset_condition<<", num_hinge "<<num_hinge<<std::endl;
     }
 
-    // //overset connectivity
-    // void GenerateHingeDonorRelation()
-    // {
-    //     for( auto & rp_overset_condition : mOversetCondition3Ds )
-    //     {}
-    // }
+    void GenerateHingeDonorRelation()
+    {
+        for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetCondition3Ds.ptr_begin(); it_p_condition != mOversetCondition3Ds.ptr_end(); it_p_condition = std::next(it_p_condition) )
+        {
+            OversetCondition3D * p_overset_condition = dynamic_cast<OversetCondition3D *> ((* it_p_condition).get());
+
+            if ( ! p_overset_condition )
+            {
+                //throw error please
+                std::cout<<__func__<<"wrong! not OversetCondition3D*"<<std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            const std::vector<Hinge3D> & r_hinges = p_overset_condition->Hinge3Ds();
+
+            for( const Hinge3D & r_hinge : r_hinges )
+            {
+                printf("%s: (%g, %g, %g)\n", __func__, r_hinge.X(), r_hinge.Y(), r_hinge.Z());
+            }
+        }
+    }
 
     // void GetHingesValues()
     // {}
