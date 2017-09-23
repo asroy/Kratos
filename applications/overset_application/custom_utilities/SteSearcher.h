@@ -174,6 +174,7 @@ public:
             r_point_searchers_pointer.push_back(new SteSearcher{ p_crd, p_cnn, r_block.mLocalToGlobal, block_id, num_node, num_element });
 
             std::cout<<__func__<<"block_id: " <<block_id<<", num_node: "<<num_node<<", num_element: "<<num_element<<std::endl;
+            std::cout<<__func__<<"block_id: " <<block_id<<", size mCrd: "<<r_block.mCrd.size()<<", size mCnn: "<<r_block.mCnn.size()<<", size mLocalToGlobal: "<<r_block.mLocalToGlobal.size()<<", size mGlobalToLocal: "<<r_block.mGlobalToLocal.size()<<std::endl;
         }
     }
 
