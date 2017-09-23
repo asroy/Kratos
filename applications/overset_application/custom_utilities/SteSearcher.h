@@ -72,8 +72,14 @@ public:
     {
         using GlobalToLocal = std::map<std::size_t,std::size_t>;
 
-        struct BlockData
+        class BlockData
         {
+            public:
+            BlockData( const std::size_t num_node = 0, const std::size_t num_element = 0 )
+                :   mNumberOfNode(num_node),
+                    mNumberOfElement(num_element)
+            {}
+
             std::size_t mNumberOfNode;
             std::size_t mNumberOfElement;
             std::vector<std::size_t> mCnn;
