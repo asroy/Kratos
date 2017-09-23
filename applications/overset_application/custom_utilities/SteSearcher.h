@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "overset_application.h"
+
 #include "DistributedAssignment.h"
 #include "Coordinate.h"
 #include "DonorInfo.h"
@@ -34,6 +36,7 @@ public:
         double * const p_crd,
         int * const p_cnn,
         const std::vector<std::size_t> local_id_to_node_id,
+        const std::size_t mesh_block_id,
         const std::size_t num_node,
         const std::size_t num_element
     )
@@ -42,6 +45,7 @@ public:
             mpCrd{p_crd},
             mpCnn{p_cnn},
             mNodesId{local_id_to_node_id},
+            mMeshBlockId{mesh_block_id},
             mNumNode{num_node},
             mNumElement{num_element},
             mSteHandle{SplitTreeSearch::steNew( mpCrd, mpCnn, PRM_TPL_4TET, mNumElement, SplitTreeSearch::TRUE )}
@@ -66,62 +70,111 @@ public:
 
     static void BuildPointSearchersFromModelPart(const ModelPart & r_model_part, std::vector<SteSearcher *> & r_point_searchers_pointer)
     {
+        using GlobalToLocal = std::map<std::size_t,std::size_t>;
+
+        struct BlockData
+        {
+            std::size_t mNumberOfNode;
+            std::size_t mNumberOfElement;
+            std::vector<std::size_t> mCnn;
+            std::vector<double> mCrd;
+            GlobalToLocal mGlobalToLocal;
+            std::vector<std::size_t> mLocalToGlobal;
+        };
+
+        using BlockDataMap = std::map<std::size_t, BlockData> ;
+
+        //
+        BlockDataMap blocks;
+
+        const ModelPart::ElementsContainerType & r_elements_pointer = const_cast<ModelPart &>(r_model_part).Elements();
+        
+        //loop over element
+        for( ModelPart::ElementsContainerType::ptr_const_iterator it_p_element = r_elements_pointer.ptr_begin(); it_p_element != r_elements_pointer.ptr_end(); it_p_element = std::next(it_p_element) )
+        {
+            const std::size_t block_id = (* it_p_element)->GetValue(BLOCK_ID);
+
+            //if this block exist or not
+            BlockDataMap::iterator it_block = blocks.find(block_id);
+
+            //add a new block
+            if( it_block == blocks.end() )
+                it_block = blocks.insert( blocks.begin(), BlockDataMap::value_type {block_id, BlockData()} );
+
+            BlockData & r_block = it_block->second;
+
+            //add element
+            r_block.mNumberOfElement = r_block.mNumberOfElement + 1;
+
+            //loop over nodes
+            Element::GeometryType r_nodes = (* it_p_element)->GetGeometry();
+
+            for( std::size_t i = 0; i < r_nodes.size(); i++ )
+            {
+                const Element::NodeType & r_node = r_nodes[i];
+
+                std::size_t global_id = r_node.GetId();
+
+                GlobalToLocal::iterator it_local_id = r_block.mGlobalToLocal.find(global_id);
+
+                std::size_t local_id;
+
+                //add a new node
+                if( it_local_id == r_block.mGlobalToLocal.end() )
+                {
+                    local_id = r_block.mNumberOfNode;
+
+                    r_block.mNumberOfNode = r_block.mNumberOfNode + 1;
+                    r_block.mLocalToGlobal.push_back(global_id);
+                    r_block.mGlobalToLocal.insert( r_block.mGlobalToLocal.begin(), GlobalToLocal::value_type {global_id, local_id} );
+
+                    r_block.mCrd.push_back( r_node.X() );
+                    r_block.mCrd.push_back( r_node.Y() );
+                    r_block.mCrd.push_back( r_node.Z() );
+                }
+                else
+                {
+                    local_id = it_local_id->second;
+                }
+
+                //add cnn
+                r_block.mCnn.push_back(local_id);
+            }
+        }
+
+        //create SteSearcher(s)
         r_point_searchers_pointer.clear();
 
-        //generate cnn, crd
-        std::size_t num_node = r_model_part.NumberOfNodes();
-        std::size_t num_element = r_model_part.NumberOfElements();
-
-        double * p_crd = new double [3*num_node];
-        int * p_cnn = new int [4*num_element];
-        std::vector<std::size_t> local_id_to_node_id(num_node);
-        std::map<std::size_t,std::size_t> node_id_to_local_id;
-
+        for ( BlockDataMap::const_iterator it_block = blocks.begin(); it_block != blocks.end(); it_block = std::next(it_block) )
         {
-            const ModelPart::NodesContainerType & r_nodes_pointer = const_cast<ModelPart &>(r_model_part).Nodes();
+            const std::size_t block_id = it_block->first;
+            const BlockData & r_block = it_block->second;
 
-            std::size_t i = 0;
+            const std::size_t num_node = r_block.mNumberOfNode;
+            const std::size_t num_element = r_block.mNumberOfElement;
 
-            for( ModelPart::NodesContainerType::ptr_const_iterator it_p_node = r_nodes_pointer.ptr_begin(); it_p_node != r_nodes_pointer.ptr_end(); it_p_node = std::next(it_p_node) )
+            double * const p_crd = new double [3*num_node];
+            int * const p_cnn = new int [4*num_element];
+
+            for( std::size_t i = 0; i < num_node; i++ )
             {
-                p_crd[3*i]   = (* it_p_node)->X();
-                p_crd[3*i+1] = (* it_p_node)->Y();
-                p_crd[3*i+2] = (* it_p_node)->Z();
-
-                std::size_t node_id = (* it_p_node)->GetId();
-
-                local_id_to_node_id[i] = node_id;
-                node_id_to_local_id[node_id] = i;
-
-                i++;
+                p_crd[3*i]   = r_block.mCrd[3*i];
+                p_crd[3*i+1] = r_block.mCrd[3*i+1];
+                p_crd[3*i+2] = r_block.mCrd[3*i+2];
             }
 
-            std::cout<<__func__<<"size of nodes "<<i<<std::endl;
-        }
-
-        {
-            const ModelPart::ElementsContainerType & r_elements_pointer = const_cast<ModelPart &>(r_model_part).Elements();
-            
-            std::size_t i = 0;
-
-            for( ModelPart::ElementsContainerType::ptr_const_iterator it_p_element = r_elements_pointer.ptr_begin(); it_p_element != r_elements_pointer.ptr_end(); it_p_element = std::next(it_p_element) )
+            for( std::size_t i = 0; i < num_element; i++ )
             {
-                const Element::GeometryType & r_nodes_pointer = (* it_p_element)->GetGeometry();
-
-                assert( r_nodes_pointer.size() == 4 );
-
-                for( Element::GeometryType::ptr_const_iterator it_p_node = r_nodes_pointer.ptr_begin(); it_p_node != r_nodes_pointer.ptr_end(); it_p_node = std::next(it_p_node) )
-                {
-                    p_cnn[i] = node_id_to_local_id[(* it_p_node)->GetId()];
-                    i++;
-                }
+                p_cnn[4*i]   = r_block.mCnn[4*i];
+                p_cnn[4*i+1] = r_block.mCnn[4*i+1];
+                p_cnn[4*i+2] = r_block.mCnn[4*i+2];
+                p_cnn[4*i+3] = r_block.mCnn[4*i+3];
             }
 
-            std::cout<<__func__<<"size of cnn "<<i<<std::endl;
+            r_point_searchers_pointer.push_back(new SteSearcher{ p_crd, p_cnn, r_block.mLocalToGlobal, block_id, num_node, num_element });
+
+            std::cout<<__func__<<"block_id: " <<block_id<<", num_node: "<<num_node<<", num_element: "<<num_element<<std::endl;
         }
-        
-        //create SteSearcher
-        r_point_searchers_pointer.push_back(new SteSearcher( p_crd, p_cnn, local_id_to_node_id, num_node, num_element ));
     }
 
     void Execute( const Coordinate & r_coordinate, DonorInfo & r_donor_info )
@@ -161,8 +214,10 @@ private:
     SplitTreeSearch::Real * const mpCrd;
     SplitTreeSearch::Integer * const mpCnn;
     const std::vector<std::size_t> mNodesId;
+    const std::size_t mMeshBlockId;
     const SplitTreeSearch::Integer mNumNode;
     const SplitTreeSearch::Integer mNumElement;
+
     const SplitTreeSearch::SteHd mSteHandle;
     
     friend class DistributedAssignment::DataUtility::DataPrinter;
