@@ -22,6 +22,7 @@ class OversetAssembler
 public:
     using OversetCommunicator = DistributedAssignment::Communication::MpiCommunicator;
     using PointSearchMethod = PointSearchMethodTemp<SteSearcher>;
+    using PointSearcherKey = PointSearchMethod::Key;
 
     OversetAssembler() = delete;
     
@@ -31,7 +32,7 @@ public:
             mpPointSearchMethod{new PointSearchMethod{mOversetCommunicator,mrModelPart}},
             mOversetCondition3Ds()
     {
-        GetOversetConditionsFromInputModelPart();
+        GenerateOversetConditionsFromInputModelPart();
     }
 
     virtual ~OversetAssembler()
@@ -39,7 +40,7 @@ public:
         delete mpPointSearchMethod;
     }
 
-    void GetOversetConditionsFromInputModelPart()
+    void GenerateOversetConditionsFromInputModelPart()
     {
         // find out default overset condition
         mOversetCondition3Ds.clear();
@@ -137,9 +138,9 @@ public:
         }
 
         std::cout<<__func__<<": size face_to_element_map: "<<face_to_element_map.size()<<std::endl;
-        
 
-        //loop over overset overset conditions
+
+        //loop over overset conditions
         for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetCondition3Ds.ptr_begin(); it_p_condition != mOversetCondition3Ds.ptr_end(); it_p_condition = std::next(it_p_condition) )
         {
             const Condition::GeometryType & r_nodes = (* it_p_condition)->GetGeometry();
@@ -201,7 +202,10 @@ public:
 
     void GenerateHingeDonorRelation()
     {
-        std::vector<std::vector<Vector>> conditions_hinges_coordinate;
+        //
+        struct Data{ std::size_t mHingeMeshBlockId; Vector mHingeCoordinate; };
+        std::vector<Data> hinges_data;
+
 
         for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetCondition3Ds.ptr_begin(); it_p_condition != mOversetCondition3Ds.ptr_end(); it_p_condition = std::next(it_p_condition) )
         {
@@ -214,12 +218,80 @@ public:
                 exit(EXIT_FAILURE);
             }
 
-            conditions_hinges_coordinate.push_back( p_overset_condition->HingesGlobalCoordinate() );
+            const std::vector<Vector> hinges_coordinate = p_overset_condition->HingesGlobalCoordinate();
+
+            //add search assignment
+            std::size_t condition_block_id = p_overset_condition->MeshBlockId();
+
+            //
+            for( const auto & r_hinge_coordinate : hinges_coordinate)
+                hinges_data.push_back({condition_block_id, r_hinge_coordinate});
+
+
+            for ( const PointSearchMethod::PointSearcherKeySetMapByMeshBlockId::value_type & r_pair : mpPointSearchMethod->GlobalSearchersKeyForBlock() )
+            {
+                std::size_t searcher_block_id = r_pair.first;
+
+                if( condition_block_id != searcher_block_id )
+                {
+                    for( const PointSearcherKey & r_searcher_key : r_pair.second )
+                    {
+                        for( const Vector & r_hinge_coordinate : hinges_coordinate )
+                            mpPointSearchMethod->AddSearch( r_searcher_key, {r_hinge_coordinate[0], r_hinge_coordinate[1], r_hinge_coordinate[2]} );
+                    }
+                }
+            }
         }
 
-        for( const auto & r_condition_hinges_coordindate : conditions_hinges_coordinate )
-            for( const auto & r_hinge_coordidate : r_condition_hinges_coordindate )
-                std::cout<<__func__<< ": coordinate "<< r_hinge_coordidate <<std::endl;
+        //execute search
+        mpPointSearchMethod->ExecuteAllSearches();
+    
+        //get search result
+        std::vector<PointSearchMethod::PointSearchAssignmentOutputData> donors_info_data;
+        mpPointSearchMethod->GetSearchResults( donors_info_data );
+
+        {
+            DistributedAssignment::DataUtility::DataPrinter printer;
+            printer.Print(donors_info_data);
+        }
+
+        //compare input vs output
+        {
+            int num_hinge = 0;
+
+            for( const auto & r_hinge_data : hinges_data )
+            {
+                printf("hinge %lu (%lg, %lg, %lg)\n", 
+                    r_hinge_data.mHingeMeshBlockId,
+                    r_hinge_data.mHingeCoordinate[0],
+                    r_hinge_data.mHingeCoordinate[1],
+                    r_hinge_data.mHingeCoordinate[2] );
+                
+                num_hinge++;
+            }
+
+            int num_found = 0;
+            for( const auto & r_donor_info_data : donors_info_data )
+            {
+                const DonorInfo donor_info = r_donor_info_data.GetData();
+
+                if( donor_info.mFound )
+                {
+                    printf("donor %lu (%lg, %lg, %lg), found %d, distance %.10e \n", 
+                        donor_info.mDonorMeshBlockId,
+                        donor_info.mInterpolatedCoordinate.mCoordinate[0],
+                        donor_info.mInterpolatedCoordinate.mCoordinate[1],
+                        donor_info.mInterpolatedCoordinate.mCoordinate[2],
+                        donor_info.mFound,
+                        donor_info.mDistance );
+
+                        num_found++;
+                }
+            }
+
+            std::cout<<"num_hinge: "<<num_hinge<<", num_found: "<<num_found<<std::endl;
+        }
+
     }
 
     // void GetHingesValues()

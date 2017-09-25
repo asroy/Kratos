@@ -4,12 +4,13 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include "overset_application.h"
 
-#include "DistributedAssignment.h"
-#include "Coordinate.h"
-#include "DonorInfo.h"
+#include "custom_utilities/DistributedAssignment.h"
+#include "custom_utilities/Coordinate.h"
+#include "custom_utilities/DonorInfo.h"
 
 namespace Kratos
 {
@@ -67,6 +68,9 @@ public:
     
     SteSearcherKey Key() const
     { return mKey; }
+
+    const std::size_t MeshBlockId() const
+    { return mMeshBlockId; }
 
     static void BuildPointSearchersFromModelPart(const ModelPart & r_model_part, std::vector<SteSearcher *> & r_point_searchers_pointer)
     {
@@ -186,11 +190,18 @@ public:
 
     void Execute( const Coordinate & r_coordinate, DonorInfo & r_donor_info )
     {
+        const double tolerance = 1e-10;
+
         SplitTreeSearch::Real coordinate[3] = { r_coordinate.mCoordinate[0], r_coordinate.mCoordinate[1], r_coordinate.mCoordinate[2] };
         SplitTreeSearch::Real barycentric_coordinate[3];
         SplitTreeSearch::Real distance = 1e100;
     
         int element_id = SplitTreeSearch::steFindElemNextHeap( mSteHandle, coordinate , barycentric_coordinate, & distance );
+        
+        if( std::abs(distance) < tolerance )
+            r_donor_info.mFound = true;
+        else
+            r_donor_info.mFound = false;
         
         r_donor_info.mDonorNodesId.clear();
         r_donor_info.mDonorNodesId.push_back( mNodesId[mpCnn[4*element_id]] );
@@ -201,6 +212,38 @@ public:
         r_donor_info.mBarycentricCoordinate[0] = (double) barycentric_coordinate[0];
         r_donor_info.mBarycentricCoordinate[1] = (double) barycentric_coordinate[1];
         r_donor_info.mBarycentricCoordinate[2] = (double) barycentric_coordinate[2];
+
+        r_donor_info.mDistance = distance;
+        r_donor_info.mDonorMeshBlockId = mMeshBlockId;
+
+        {
+            double x, y, z;
+            double lCrd[4];
+            double shp[4];
+            
+            lCrd[0] = barycentric_coordinate[0];
+            lCrd[1] = barycentric_coordinate[1];
+            lCrd[2] = barycentric_coordinate[2];
+            lCrd[3] = 2 - lCrd[0] - lCrd[1] - lCrd[2];
+
+            shp[0] = lCrd[3] / 2 ;
+            shp[1] = lCrd[0] / 2 ;
+            shp[2] = lCrd[1] / 2 ;
+            shp[3] = lCrd[2] / 2 ;
+
+            x = 0;
+            y = 0;
+            z = 0;
+            for( int i = 0 ; i < 4 ; i++ )
+            {
+                int j = mpCnn[4*element_id+i] ;
+                x += shp[i] * mpCrd[j*3] ;
+                y += shp[i] * mpCrd[j*3+1] ;
+                z += shp[i] * mpCrd[j*3+2] ;
+            }
+
+            r_donor_info.mInterpolatedCoordinate = {x, y, z};
+        }
     }
 
 private:

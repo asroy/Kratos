@@ -19,6 +19,8 @@
 #include "includes/variables.h"
 #include "includes/condition.h"
 #include "includes/ublas_interface.h"
+
+#include "overset_application.h"
 #include "custom_conditions/OversetCondition3D.h"
 
 namespace Kratos
@@ -26,17 +28,20 @@ namespace Kratos
 //default protected constructor
 OversetCondition3D::OversetCondition3D(IndexType NewId)
     :   Condition(NewId),
-        mIntegrationMethod{GetIntegrationMethod()}
+        mIntegrationMethod{GetIntegrationMethod()},
+        mAdjacentElementSide{0}
 {}
 
 OversetCondition3D::OversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry)
     :   Condition(NewId, pGeometry),
-        mIntegrationMethod{GetIntegrationMethod()}
+        mIntegrationMethod{GetIntegrationMethod()},
+        mAdjacentElementSide{0}
 {}
 
 OversetCondition3D::OversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties)
     :   Condition(NewId, pGeometry, pProperties),
-        mIntegrationMethod{GetIntegrationMethod()}
+        mIntegrationMethod{GetIntegrationMethod()},
+        mAdjacentElementSide{0}
 {}
 
 OversetCondition3D::~OversetCondition3D()
@@ -84,13 +89,18 @@ const std::vector<Vector> OversetCondition3D::HingesGlobalCoordinate() const
 const std::vector<Hinge3D> & OversetCondition3D::Hinge3Ds() const
 { return mHinge3Ds; }
 
-const Element::WeakPointer OversetCondition3D::pAdjacentElement() const
+const Element::Pointer OversetCondition3D::pAdjacentElement() const
 { return mpAdjacentElement; }
 
 void OversetCondition3D::SetAdjacentElementAndSide( const Element::WeakPointer & rp_adjacent_element, const std::size_t element_side )
 {
-    mpAdjacentElement = rp_adjacent_element;
+    mpAdjacentElement = rp_adjacent_element.lock();
     mAdjacentElementSide = element_side;
+}
+
+const std::size_t OversetCondition3D::MeshBlockId() const
+{
+    return mpAdjacentElement->GetValue(BLOCK_ID);
 }
 
 }//namespace Kratos 

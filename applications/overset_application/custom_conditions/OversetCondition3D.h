@@ -52,9 +52,11 @@ public:
 
     const std::vector<Vector> HingesGlobalCoordinate() const;
 
-    const Element::WeakPointer pAdjacentElement() const;
+    const Element::Pointer pAdjacentElement() const;
 
     void SetAdjacentElementAndSide( const Element::WeakPointer & rp_adjacent_element, const std::size_t element_side );
+
+    const std::size_t MeshBlockId() const;
 
 protected:
     //default constructor necessary for serialization  
@@ -63,7 +65,7 @@ protected:
 private:
     IntegrationMethod mIntegrationMethod;
     std::vector<Hinge3D> mHinge3Ds;
-    Element::WeakPointer mpAdjacentElement;
+    Element::Pointer mpAdjacentElement;
     std::size_t mAdjacentElementSide;
 
 friend class Serializer;
