@@ -28,12 +28,12 @@ public:
     using KeyIssuer = DistributedAssignment::DistributedAssignment::DistributedKeyIssuer<Location>;
     using Key = KeyIssuer::Key;
 
-    using DummyContractor = DistributedAssignment::DistributedAssignment::DummyContractor<Key>;
-    using DummyContractorManager = DistributedAssignment::DistributedAssignment::DistributedContractorManager<DummyContractor,OversetCommunicator,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer>;
-
+    using DummyModelPartHolder = DistributedAssignment::DistributedAssignment::DummyContractor<Key>;
+    using DummyModelPartHolderManager = DistributedAssignment::DistributedAssignment::DistributedContractorManager<DummyModelPartHolder,OversetCommunicator,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer>;
+    
     using PointSearcherManager = DistributedAssignment::DistributedAssignment::DistributedContractorManager<TPointSearcher,OversetCommunicator,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer>;
 
-    using PointSearchAssignmentManager = DistributedAssignment::DistributedAssignment::DistributedAssignmentManager<DummyContractor,TPointSearcher,Coordinate,DonorInfo,OversetCommunicator,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer>;
+    using PointSearchAssignmentManager = DistributedAssignment::DistributedAssignment::DistributedAssignmentManager<DummyModelPartHolder,TPointSearcher,Coordinate,DonorInfo,OversetCommunicator,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer>;
 
     using PointSearchAssignmentInputData  = typename PointSearchAssignmentManager::template AssignmentDataType<Coordinate>;
     using PointSearchAssignmentOutputData = typename PointSearchAssignmentManager::template AssignmentDataType<DonorInfo>;
@@ -44,27 +44,29 @@ public:
 public:
     PointSearchMethodTemp() = delete;
 
-    PointSearchMethodTemp( OversetCommunicator & r_communicator, const ModelPart & r_model_part )
+    PointSearchMethodTemp
+    ( 
+        OversetCommunicator & r_communicator, 
+        DummyModelPartHolderManager & r_dummy_model_part_holder_manager, 
+        const std::size_t model_part_id,
+        const ModelPart & r_model_part
+    )
         :   mrOversetCommunicator{r_communicator},
-            mpDummyAssignorManager{nullptr},
+            mrDummyModelPartHolderManager{r_dummy_model_part_holder_manager},
+            mModelPartId{model_part_id},
             mpSearcherManager{nullptr},
             mpSearchAssignmentManager{nullptr}
     {
-        //dummy assignor
-        mpDummyAssignorManager = new DummyContractorManager{mrOversetCommunicator};
-        mpDummyAssignorManager->RegisterLocalContractor( * (new DummyContractor()), "DummyContractor" );
-        mpDummyAssignorManager->GenerateGlobalContractorsRegistry();
-
         //searcher
         std::vector<TPointSearcher *> local_point_searchers_pointer;
-        TPointSearcher::BuildPointSearchersFromModelPart(r_model_part, local_point_searchers_pointer);
+        TPointSearcher::BuildPointSearchersFromModelPart(r_model_part, mModelPartId, local_point_searchers_pointer);
 
         mpSearcherManager = new PointSearcherManager{mrOversetCommunicator};
         mpSearcherManager->RegisterLocalContractors( local_point_searchers_pointer, "SteSearcher" );
         mpSearcherManager->GenerateGlobalContractorsRegistry();
 
         //search assignment manager
-        mpSearchAssignmentManager = new PointSearchAssignmentManager{r_communicator, *mpDummyAssignorManager, *mpSearcherManager};
+        mpSearchAssignmentManager = new PointSearchAssignmentManager{r_communicator, mrDummyModelPartHolderManager, * mpSearcherManager};
 
         //block_id
         struct BlockIdAndSearcherKey
@@ -137,12 +139,6 @@ public:
 
     virtual ~PointSearchMethodTemp()
     {
-        //dummy assignor and manager
-        for( typename DummyContractorManager::ContractorPointerPairByContractorKey & r_dummy_assignor_pair : mpDummyAssignorManager->LocalContractorsPointer() )
-            delete r_dummy_assignor_pair.second;
-
-        delete mpDummyAssignorManager;
-        
         //searchers and manager
         for( typename PointSearcherManager::ContractorPointerPairByContractorKey & r_searcher_pair : mpSearcherManager->LocalContractorsPointer() )
             delete r_searcher_pair.second;
@@ -164,11 +160,11 @@ public:
         mpSearchAssignmentManager->ClearAllAssignments();
     }
 
-    void AddSearch( const Key & r_searcher_key, const Coordinate & r_coordinate )
+    Key AddSearch( const Key & r_searcher_key, const Coordinate & r_coordinate )
     {
-        const Key & r_dummy_assignor_key = *(mpDummyAssignorManager->LocalContractorsKey().begin());
+        const Key & r_dummy_model_part_holder_key = *(mrDummyModelPartHolderManager.LocalContractorsKey().begin());
 
-        mpSearchAssignmentManager->AddAssignment( r_dummy_assignor_key, r_searcher_key, r_coordinate );
+        return mpSearchAssignmentManager->AddAssignment( r_dummy_model_part_holder_key, r_searcher_key, r_coordinate );
     }
 
     void ExecuteAllSearches()
@@ -183,7 +179,8 @@ public:
 
 private:
     OversetCommunicator & mrOversetCommunicator;
-    DummyContractorManager * mpDummyAssignorManager;
+    DummyModelPartHolderManager & mrDummyModelPartHolderManager;
+    const std::size_t mModelPartId;
     PointSearcherManager * mpSearcherManager;
     PointSearchAssignmentManager * mpSearchAssignmentManager;
     BlockIdSet mGlobalSearcherBlocksId;

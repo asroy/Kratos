@@ -36,7 +36,9 @@ public:
     ( 
         double * const p_crd,
         int * const p_cnn,
-        const std::vector<std::size_t> local_id_to_node_id,
+        const std::size_t model_part_id,
+        const std::vector<std::size_t> local_node_id_to_node_id,
+        const std::vector<std::size_t> local_element_to_element_id,
         const std::size_t mesh_block_id,
         const std::size_t num_node,
         const std::size_t num_element
@@ -45,7 +47,9 @@ public:
             mKey(),
             mpCrd{p_crd},
             mpCnn{p_cnn},
-            mNodesId{local_id_to_node_id},
+            mModelPartId{model_part_id},
+            mNodesId{local_node_id_to_node_id},
+            mElementsId{local_element_to_element_id},
             mMeshBlockId{mesh_block_id},
             mNumNode{num_node},
             mNumElement{num_element},
@@ -72,7 +76,7 @@ public:
     const std::size_t MeshBlockId() const
     { return mMeshBlockId; }
 
-    static void BuildPointSearchersFromModelPart(const ModelPart & r_model_part, std::vector<SteSearcher *> & r_point_searchers_pointer)
+    static void BuildPointSearchersFromModelPart(const ModelPart & r_model_part, const std::size_t model_part_id, std::vector<SteSearcher *> & r_point_searchers_pointer)
     {
         using GlobalToLocal = std::map<std::size_t,std::size_t>;
 
@@ -88,8 +92,9 @@ public:
             std::size_t mNumberOfElement;
             std::vector<std::size_t> mCnn;
             std::vector<double> mCrd;
-            GlobalToLocal mGlobalToLocal;
-            std::vector<std::size_t> mLocalToGlobal;
+            GlobalToLocal mGlobalToLocalNode;
+            std::vector<std::size_t> mLocalToGlobalNode;
+            std::vector<std::size_t> mLocalToGlobalElement;
         };
 
         using BlockDataMap = std::map<std::size_t, BlockData> ;
@@ -114,6 +119,8 @@ public:
             BlockData & r_block = it_block->second;
 
             //add element
+            std::size_t global_element_id = (* it_p_element)->GetId();
+            r_block.mLocalToGlobalElement.push_back(global_element_id);
             r_block.mNumberOfElement = r_block.mNumberOfElement + 1;
 
             //loop over nodes
@@ -123,20 +130,20 @@ public:
             {
                 const Element::NodeType & r_node = r_nodes[i];
 
-                std::size_t global_id = r_node.GetId();
+                std::size_t global_node_id = r_node.GetId();
 
-                GlobalToLocal::iterator it_local_id = r_block.mGlobalToLocal.find(global_id);
+                GlobalToLocal::iterator it_local_node_id = r_block.mGlobalToLocalNode.find(global_node_id);
 
-                std::size_t local_id;
+                std::size_t local_node_id;
 
                 //add a new node
-                if( it_local_id == r_block.mGlobalToLocal.end() )
+                if( it_local_node_id == r_block.mGlobalToLocalNode.end() )
                 {
-                    local_id = r_block.mNumberOfNode;
+                    local_node_id = r_block.mNumberOfNode;
 
                     r_block.mNumberOfNode = r_block.mNumberOfNode + 1;
-                    r_block.mLocalToGlobal.push_back(global_id);
-                    r_block.mGlobalToLocal.insert( r_block.mGlobalToLocal.begin(), GlobalToLocal::value_type {global_id, local_id} );
+                    r_block.mLocalToGlobalNode.push_back(global_node_id);
+                    r_block.mGlobalToLocalNode.insert( r_block.mGlobalToLocalNode.begin(), GlobalToLocal::value_type {global_node_id, local_node_id} );
 
                     r_block.mCrd.push_back( r_node.X() );
                     r_block.mCrd.push_back( r_node.Y() );
@@ -144,11 +151,11 @@ public:
                 }
                 else
                 {
-                    local_id = it_local_id->second;
+                    local_node_id = it_local_node_id->second;
                 }
 
                 //add cnn
-                r_block.mCnn.push_back(local_id);
+                r_block.mCnn.push_back(local_node_id);
             }
         }
 
@@ -181,10 +188,20 @@ public:
                 p_cnn[4*i+3] = r_block.mCnn[4*i+3];
             }
 
-            r_point_searchers_pointer.push_back(new SteSearcher{ p_crd, p_cnn, r_block.mLocalToGlobal, block_id, num_node, num_element });
+            r_point_searchers_pointer.push_back
+            (
+                new SteSearcher
+                { 
+                    p_crd, p_cnn, 
+                    model_part_id, 
+                    r_block.mLocalToGlobalNode, 
+                    r_block.mLocalToGlobalElement, 
+                    block_id,num_node, num_element
+                }
+            );
 
             std::cout<<__func__<<"block_id: " <<block_id<<", num_node: "<<num_node<<", num_element: "<<num_element<<std::endl;
-            std::cout<<__func__<<"block_id: " <<block_id<<", size mCrd: "<<r_block.mCrd.size()<<", size mCnn: "<<r_block.mCnn.size()<<", size mLocalToGlobal: "<<r_block.mLocalToGlobal.size()<<", size mGlobalToLocal: "<<r_block.mGlobalToLocal.size()<<std::endl;
+            std::cout<<__func__<<"block_id: " <<block_id<<", size mCrd: "<<r_block.mCrd.size()<<", size mCnn: "<<r_block.mCnn.size()<<", size mLocalToGlobalNode: "<<r_block.mLocalToGlobalNode.size()<<", size mGlobalToLocalNode: "<<r_block.mGlobalToLocalNode.size()<<std::endl;
         }
     }
 
@@ -202,16 +219,20 @@ public:
             r_donor_info.mFound = true;
         else
             r_donor_info.mFound = false;
-        
+
+        r_donor_info.mDonorModelPartId = mModelPartId;
+
+        r_donor_info.mDonorElementId = mElementsId[element_id];
+
         r_donor_info.mDonorNodesId.clear();
         r_donor_info.mDonorNodesId.push_back( mNodesId[mpCnn[4*element_id]] );
         r_donor_info.mDonorNodesId.push_back( mNodesId[mpCnn[4*element_id+1]] );
         r_donor_info.mDonorNodesId.push_back( mNodesId[mpCnn[4*element_id+2]] );
         r_donor_info.mDonorNodesId.push_back( mNodesId[mpCnn[4*element_id+3]] );
 
-        r_donor_info.mBarycentricCoordinate[0] = (double) barycentric_coordinate[0];
-        r_donor_info.mBarycentricCoordinate[1] = (double) barycentric_coordinate[1];
-        r_donor_info.mBarycentricCoordinate[2] = (double) barycentric_coordinate[2];
+        r_donor_info.mDonorBarycentricCoordinate[0] = (double) barycentric_coordinate[0]/(double) 2;
+        r_donor_info.mDonorBarycentricCoordinate[1] = (double) barycentric_coordinate[1]/(double) 2;
+        r_donor_info.mDonorBarycentricCoordinate[2] = (double) barycentric_coordinate[2]/(double) 2;
 
         r_donor_info.mDistance = distance;
         r_donor_info.mDonorMeshBlockId = mMeshBlockId;
@@ -263,7 +284,9 @@ private:
 
     SplitTreeSearch::Real * const mpCrd;
     SplitTreeSearch::Integer * const mpCnn;
+    const std::size_t mModelPartId;
     const std::vector<std::size_t> mNodesId;
+    const std::vector<std::size_t> mElementsId;
     const std::size_t mMeshBlockId;
     const SplitTreeSearch::Integer mNumNode;
     const SplitTreeSearch::Integer mNumElement;

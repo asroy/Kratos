@@ -63,27 +63,20 @@ void OversetCondition3D::GenerateHinges()
         mHinge3Ds.push_back(Hinge3D{r_integration_point});
 }
 
-const std::vector<Vector> OversetCondition3D::HingesGlobalCoordinate() const
+const Vector OversetCondition3D::HingeGlobalCoordinate(const std::size_t local_hinge_id ) const
 {
-    std::vector<Vector> r_coordinates;
-    Vector r_coordinate(3);
-    
     const GeometryType & r_nodes = GetGeometry();
 
-    for( const Hinge3D & r_hinge : mHinge3Ds )
-    {
-        Vector Ns(r_nodes.size());
+    Vector Ns(r_nodes.size());
 
-        GetGeometry().ShapeFunctionsValues(Ns, r_hinge);
+    GetGeometry().ShapeFunctionsValues(Ns, mHinge3Ds[local_hinge_id]);
 
-        noalias(r_coordinate) = ZeroVector(3);
-        for(std::size_t i = 0; i < r_nodes.size(); i++ )
-            noalias(r_coordinate) += Ns[i]*r_nodes[i];
+    Vector r_coordinate(3);
+    noalias(r_coordinate) = ZeroVector(3);
+    for(std::size_t i = 0; i < r_nodes.size(); i++ )
+        noalias(r_coordinate) += Ns[i]*r_nodes[i];
 
-        r_coordinates.push_back(r_coordinate);
-    }
-
-    return r_coordinates;
+    return r_coordinate;
 }
 
 const std::vector<Hinge3D> & OversetCondition3D::Hinge3Ds() const
@@ -102,5 +95,8 @@ const std::size_t OversetCondition3D::MeshBlockId() const
 {
     return mpAdjacentElement->GetValue(BLOCK_ID);
 }
+
+Hinge3D & OversetCondition3D::rHinge3D(const std::size_t i)
+{ return mHinge3Ds[i]; }
 
 }//namespace Kratos 

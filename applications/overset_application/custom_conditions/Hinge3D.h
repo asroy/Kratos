@@ -20,6 +20,7 @@
 #include "includes/define.h"
 #include "includes/serializer.h"
 #include "includes/variables.h"
+#include "includes/model_part.h"
 
 #include "integration/integration_point.h"
 
@@ -32,6 +33,8 @@ private:
     using IntegrationPointType = IntegrationPoint<3>;
 
 public:
+    Hinge3D() = delete;
+
     Hinge3D( const IntegrationPointType & r_integration_point )
         :   IntegrationPointType{r_integration_point}
     {}
@@ -39,17 +42,25 @@ public:
     ~Hinge3D() override
     {}
 
-private:
-  	// A private default constructor necessary for serialization  
-    Hinge3D()
-        :   IntegrationPointType()
-    {}
+    //dangerous!
+    std::size_t & rDonorModelPartId()
+    { return mDonorModelPartId; }
 
-//member
-private:
-    std::vector<std::size_t> mDonorNodesId;
+    ModelPart::ElementType::IndexType & rDonorElementId()
+    { return mDonorElementId; }
 
-friend class Serializer;
+    std::vector<ModelPart::NodeType::IndexType> & rDonorNodesId()
+    { return mDonorNodesId; }
+
+    Point<3> & rDonorBarycentricCoordinate()
+    { return mDonorBarycentricCoordinate; }
+
+private:
+    std::size_t mDonorModelPartId;
+    ModelPart::ElementType::IndexType mDonorElementId;
+    std::vector<ModelPart::NodeType::IndexType> mDonorNodesId;
+    Point<3> mDonorBarycentricCoordinate;
+
 };
 
 }//namespace Kratos

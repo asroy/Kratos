@@ -50,7 +50,7 @@ public:
 
     const std::vector<Hinge3D> & Hinge3Ds() const;
 
-    const std::vector<Vector> HingesGlobalCoordinate() const;
+    const Vector HingeGlobalCoordinate(const std::size_t local_hinge_id) const;
 
     const Element::Pointer pAdjacentElement() const;
 
@@ -58,11 +58,16 @@ public:
 
     const std::size_t MeshBlockId() const;
 
+    //dangerous!
+    Hinge3D & rHinge3D(const std::size_t i);
+
 protected:
     //default constructor necessary for serialization  
     OversetCondition3D(IndexType NewId = 0);
 
 private:
+    //write access to mHinge3Ds
+
     IntegrationMethod mIntegrationMethod;
     std::vector<Hinge3D> mHinge3Ds;
     Element::Pointer mpAdjacentElement;
