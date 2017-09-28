@@ -94,6 +94,9 @@ void PoissonOversetCondition3D::LocalEquationIdVector(EquationIdVectorType& rRes
 
 void PoissonOversetCondition3D::DonorEquationIdVector(EquationIdVectorType& rResult, ProcessInfo & rCurrentProcessInfo)
 {
+
+	std::cout<<__func__<<std::endl;
+	
     std::size_t num_dof = 0;
 
     for(std::size_t i_hinge = 0; i_hinge < NumberOfHinges(); i_hinge++ )
@@ -111,7 +114,9 @@ void PoissonOversetCondition3D::DonorEquationIdVector(EquationIdVectorType& rRes
         for( std::size_t j = 0; j < r_hinge_donor_data.mEquationsId.size(); j++ )
         {
             rResult[i] = r_hinge_donor_data.mEquationsId[j];
-            i++;
+			i++;
+			
+			std::cout<<__func__<<"r_hinge_donor_data.mEquationsId[j] "<<r_hinge_donor_data.mEquationsId[j]<<std::endl;
         }
     }
 }
