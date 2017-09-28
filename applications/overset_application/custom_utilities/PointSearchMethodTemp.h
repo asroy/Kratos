@@ -11,8 +11,8 @@
 
 #include "custom_utilities/DistributedAssignment.h"
 #include "custom_utilities/SteSearcher.h"
-#include "custom_utilities/Coordinate.h"
-#include "custom_utilities/DonorInfo.h"
+#include "custom_utilities/PointSearchInput.h"
+#include "custom_utilities/PointSearchOutput.h"
 
 namespace Kratos
 {
@@ -33,10 +33,10 @@ public:
     
     using PointSearcherManager = DistributedAssignment::DistributedAssignment::DistributedContractorManager<TPointSearcher,OversetCommunicator,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer>;
 
-    using PointSearchAssignmentManager = DistributedAssignment::DistributedAssignment::DistributedAssignmentManager<DummyModelPartHolder,TPointSearcher,Coordinate,DonorInfo,OversetCommunicator,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer>;
+    using PointSearchAssignmentManager = DistributedAssignment::DistributedAssignment::DistributedAssignmentManager<DummyModelPartHolder,TPointSearcher,PointSearchInput,PointSearchOutput,OversetCommunicator,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer>;
 
-    using PointSearchAssignmentInputData  = typename PointSearchAssignmentManager::template AssignmentDataType<Coordinate>;
-    using PointSearchAssignmentOutputData = typename PointSearchAssignmentManager::template AssignmentDataType<DonorInfo>;
+    using PointSearchAssignmentInputData  = typename PointSearchAssignmentManager::template AssignmentDataType<PointSearchInput>;
+    using PointSearchAssignmentOutputData = typename PointSearchAssignmentManager::template AssignmentDataType<PointSearchOutput>;
 
     using BlockIdSet = std::set<std::size_t> ;
     using PointSearcherKeySetMapByMeshBlockId = std::map<std::size_t,std::set<Key,Key::LessThanComparator>>;
@@ -160,7 +160,7 @@ public:
         mpSearchAssignmentManager->ClearAllAssignments();
     }
 
-    Key AddSearch( const Key & r_searcher_key, const Coordinate & r_coordinate )
+    Key AddSearch( const Key & r_searcher_key, const PointSearchInput & r_coordinate )
     {
         const Key & r_dummy_model_part_holder_key = *(mrDummyModelPartHolderManager.LocalContractorsKey().begin());
 

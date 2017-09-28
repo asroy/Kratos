@@ -9,8 +9,8 @@
 #include "overset_application.h"
 
 #include "custom_utilities/DistributedAssignment.h"
-#include "custom_utilities/Coordinate.h"
-#include "custom_utilities/DonorInfo.h"
+#include "custom_utilities/PointSearchInput.h"
+#include "custom_utilities/PointSearchOutput.h"
 
 namespace Kratos
 {
@@ -205,37 +205,37 @@ public:
         }
     }
 
-    void Execute( const Coordinate & r_coordinate, DonorInfo & r_donor_info )
+    void Execute( const PointSearchInput & r_input, PointSearchOutput & r_output )
     {
         const double tolerance = 1e-10;
 
-        SplitTreeSearch::Real coordinate[3] = { r_coordinate.mCoordinate[0], r_coordinate.mCoordinate[1], r_coordinate.mCoordinate[2] };
+        SplitTreeSearch::Real coordinate[3] = { r_input.mCoordinate[0], r_input.mCoordinate[1], r_input.mCoordinate[2] };
         SplitTreeSearch::Real barycentric_coordinate[3];
         SplitTreeSearch::Real distance = 1e100;
     
         int element_id = SplitTreeSearch::steFindElemNextHeap( mSteHandle, coordinate , barycentric_coordinate, & distance );
         
         if( std::abs(distance) < tolerance )
-            r_donor_info.mFound = true;
+            r_output.mFound = true;
         else
-            r_donor_info.mFound = false;
+            r_output.mFound = false;
 
-        r_donor_info.mDonorModelPartId = mModelPartId;
+        r_output.mModelPartId = mModelPartId;
 
-        r_donor_info.mDonorElementId = mElementsId[element_id];
+        r_output.mElementId = mElementsId[element_id];
 
-        r_donor_info.mDonorNodesId.clear();
-        r_donor_info.mDonorNodesId.push_back( mNodesId[mpCnn[4*element_id]] );
-        r_donor_info.mDonorNodesId.push_back( mNodesId[mpCnn[4*element_id+1]] );
-        r_donor_info.mDonorNodesId.push_back( mNodesId[mpCnn[4*element_id+2]] );
-        r_donor_info.mDonorNodesId.push_back( mNodesId[mpCnn[4*element_id+3]] );
+        r_output.mNodesId.clear();
+        r_output.mNodesId.push_back( mNodesId[mpCnn[4*element_id]] );
+        r_output.mNodesId.push_back( mNodesId[mpCnn[4*element_id+1]] );
+        r_output.mNodesId.push_back( mNodesId[mpCnn[4*element_id+2]] );
+        r_output.mNodesId.push_back( mNodesId[mpCnn[4*element_id+3]] );
 
-        r_donor_info.mDonorBarycentricCoordinate[0] = (double) barycentric_coordinate[0]/(double) 2;
-        r_donor_info.mDonorBarycentricCoordinate[1] = (double) barycentric_coordinate[1]/(double) 2;
-        r_donor_info.mDonorBarycentricCoordinate[2] = (double) barycentric_coordinate[2]/(double) 2;
+        r_output.mBarycentricCoordinate[0] = (double) barycentric_coordinate[0]/(double) 2;
+        r_output.mBarycentricCoordinate[1] = (double) barycentric_coordinate[1]/(double) 2;
+        r_output.mBarycentricCoordinate[2] = (double) barycentric_coordinate[2]/(double) 2;
 
-        r_donor_info.mDistance = distance;
-        r_donor_info.mDonorMeshBlockId = mMeshBlockId;
+        r_output.mDistance = distance;
+        r_output.mMeshBlockId = mMeshBlockId;
 
         {
             double x, y, z;
@@ -263,7 +263,9 @@ public:
                 z += shp[i] * mpCrd[j*3+2] ;
             }
 
-            r_donor_info.mInterpolatedCoordinate = {x, y, z};
+            r_output.mInterpolatedCoordinate[0] = x;
+            r_output.mInterpolatedCoordinate[1] = y;
+            r_output.mInterpolatedCoordinate[2] = z;
         }
     }
 

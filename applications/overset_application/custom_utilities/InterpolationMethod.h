@@ -12,7 +12,7 @@
 #include "custom_utilities/DistributedAssignment.h"
 #include "custom_utilities/Interpolator.h"
 #include "custom_utilities/InterpolationInput.h"
-#include "custom_conditions/HingeData.h"
+#include "custom_utilities/InterpolationOutput.h"
 
 namespace Kratos
 {
@@ -32,10 +32,10 @@ public:
     
     using InterpolatorManager = DistributedAssignment::DistributedAssignment::DistributedContractorManager<Interpolator,OversetCommunicator,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer>;
 
-    using InterpolationAssignmentManager = DistributedAssignment::DistributedAssignment::DistributedAssignmentManager<DummyModelPartHolder,Interpolator,InterpolationInput,HingeData,OversetCommunicator,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer>;
+    using InterpolationAssignmentManager = DistributedAssignment::DistributedAssignment::DistributedAssignmentManager<DummyModelPartHolder,Interpolator,InterpolationInput,InterpolationOutput,OversetCommunicator,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer,DistributedAssignment::DistributedAssignment::DistributedKeyIssuer>;
 
     using InterpolationAssignmentInputData  = typename InterpolationAssignmentManager::template AssignmentDataType<InterpolationInput>;
-    using InterpolationAssignmentOutputData = typename InterpolationAssignmentManager::template AssignmentDataType<HingeData>;
+    using InterpolationAssignmentOutputData = typename InterpolationAssignmentManager::template AssignmentDataType<InterpolationOutput>;
 
 public:
     InterpolationMethod() = delete;
@@ -84,9 +84,9 @@ public:
         mpInterpolationAssignmentManager->ExecuteAllDistributedAssignments();
     }
 
-    void GetInterpolationResults( std::vector<InterpolationAssignmentOutputData> & r_hinges_data )
+    void GetInterpolationResults( std::vector<InterpolationAssignmentOutputData> & r_outputs )
     {
-        mpInterpolationAssignmentManager->GetResultsAtAssignor( r_hinges_data );
+        mpInterpolationAssignmentManager->GetResultsAtAssignor( r_outputs );
     }
 
 private:

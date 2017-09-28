@@ -23,12 +23,12 @@
 #include "includes/ublas_interface.h"
 #include "includes/variables.h"
 
-#include "overset_application/custom_conditions/OversetCondition3D.h"
+#include "overset_application/custom_conditions/OversetCondition.h"
 
 
 namespace Kratos
 {
-class PoissonOversetCondition3D : public OversetCondition3D
+class PoissonOversetCondition3D : public OversetCondition
 {
 public:
     ///@name Type Definitions
@@ -56,7 +56,7 @@ public:
 protected:
 	//default constructor necessary for serialization  
     PoissonOversetCondition3D() 
-        :   OversetCondition3D()
+        :   OversetCondition()
     {}
 
 private:

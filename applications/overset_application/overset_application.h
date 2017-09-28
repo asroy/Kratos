@@ -11,20 +11,18 @@
 #define  KRATOS_OVERSET_APPLICATION_H_INCLUDED
 
 
-
 // System includes
 #include <string>
 #include <iostream> 
 
-
 // External includes 
-
 
 // Project includes
 #include "includes/define.h"
 #include "includes/kratos_application.h"
 #include "includes/variables.h"
-#include "custom_conditions/OversetCondition3D.h"
+
+#include "custom_conditions/OversetCondition.h"
 
 
 namespace Kratos
@@ -71,7 +69,7 @@ namespace Kratos
 		}
 
 	private:
-		const OversetCondition3D mOversetCondition3D;
+		const OversetCondition mOversetCondition;
 
 		KratosOversetApplication& operator=(KratosOversetApplication const& rOther);
 

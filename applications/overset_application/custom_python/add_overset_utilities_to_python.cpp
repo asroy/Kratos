@@ -57,12 +57,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // Project includes
 #include "includes/define.h"
 #include "processes/process.h"
-
 #include "spaces/ublas_space.h"
 #include "linear_solvers/linear_solver.h"
 
-#include "custom_python/add_overset_utilities_to_python.h"
 #include "custom_utilities/OversetAssembler.h"
+#include "custom_python/add_overset_utilities_to_python.h"
 
 
 namespace Kratos
@@ -75,8 +74,8 @@ namespace Python
 		
 		class_<OversetAssembly::OversetAssembler, boost::noncopyable> ("OversetAssembler", init<const ModelPart &>())
 			.def("GenerateHinges", &OversetAssembly::OversetAssembler::GenerateHinges)
-			.def("GenerateHingeDonorRelation", &OversetAssembly::OversetAssembler::GenerateHingeDonorRelation)
-			.def("InterpolateHingeData", &OversetAssembly::OversetAssembler::InterpolateHingeData);
+			.def("SearchHingesDonor", &OversetAssembly::OversetAssembler::SearchHingesDonor)
+			.def("InterpolateHingesDonorData", &OversetAssembly::OversetAssembler::InterpolateHingesDonorData);
 	}
 
 }//namespace Python

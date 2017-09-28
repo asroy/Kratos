@@ -28,8 +28,8 @@ namespace Kratos
 {
    	KRATOS_CREATE_VARIABLE(int, BLOCK_ID)
 
-	 KratosOversetApplication::KratosOversetApplication()
-	 	:	mOversetCondition3D ( 0, Element::GeometryType::Pointer( new Triangle3D3 <Node<3> >( Element::GeometryType::PointsArrayType (3) ) ) )
+	KratosOversetApplication::KratosOversetApplication()
+	 	:	mOversetCondition ( 0, Element::GeometryType::Pointer( new Triangle3D3 <Node<3> >( Element::GeometryType::PointsArrayType (3) ) ) )
  	{}
  	
  	void KratosOversetApplication::Register()
@@ -40,8 +40,7 @@ namespace Kratos
  
 		KRATOS_REGISTER_VARIABLE( BLOCK_ID )
 
-		KRATOS_REGISTER_CONDITION( "OversetCondition3D", mOversetCondition3D )
-
+		KRATOS_REGISTER_CONDITION( "OversetCondition", mOversetCondition )
  	}
 
 }  // namespace Kratos.

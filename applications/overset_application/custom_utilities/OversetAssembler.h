@@ -5,7 +5,7 @@
 #include "boost/smart_ptr.hpp"
 
 // Project includes
-#include "custom_conditions/OversetCondition3D.h"
+#include "custom_conditions/OversetCondition.h"
 #include "custom_utilities/DistributedAssignment.h"
 #include "custom_utilities/PointSearchMethodTemp.h"
 #include "custom_utilities/SteSearcher.h"
@@ -37,6 +37,8 @@ private:
     using InterpolatorKey = InterpolationMethod::Key;
     using InterpolationAssignmentKey = InterpolationMethod::Key;
 
+    using PointType = Point<3>;
+
 public:
     OversetAssembler() = delete;
 
@@ -47,7 +49,7 @@ public:
             mDummyModelPartHolderManager{mOversetCommunicator},
             mpPointSearchMethod{nullptr},
             mpInterpolationMethod{nullptr},
-            mOversetCondition3Ds()
+            mOversetConditions()
     {
         //dummy model part holder
         mDummyModelPartHolderManager.RegisterLocalContractor( mDummyModelPartHolder, "DummyModelPartHolder" );
@@ -91,19 +93,19 @@ public:
     void GenerateOversetConditionsFromInputModelPart()
     {
         // find out default overset condition
-        mOversetCondition3Ds.clear();
+        mOversetConditions.clear();
 
         //have to cast away const of ModelPart here, because Conditions() is non const;
         const ModelPart::ConditionsContainerType & r_conditions_pointer = const_cast<ModelPart &>(mrModelPart).Conditions();
 
         for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = r_conditions_pointer.ptr_begin(); it_p_condition != r_conditions_pointer.ptr_end(); it_p_condition = std::next(it_p_condition) )
         {
-            OversetCondition3D * p_overset_condition = dynamic_cast<OversetCondition3D *> ((* it_p_condition).get());
+            OversetCondition * p_overset_condition = dynamic_cast<OversetCondition *> ((* it_p_condition).get());
             if( p_overset_condition )
-                mOversetCondition3Ds.push_back(* it_p_condition);
+                mOversetConditions.push_back(* it_p_condition);
         }
 
-        std::cout<<__func__<<": size mOversetCondition3Ds: "<<mOversetCondition3Ds.size()<<std::endl;
+        std::cout<<__func__<<": size mOversetConditions: "<<mOversetConditions.size()<<std::endl;
 
         // Generate overset condition-to-element adjacency
         using NodeIdVector = std::vector<std::size_t>;
@@ -149,7 +151,7 @@ public:
 
         struct ElementAndSide
         {
-            Element::WeakPointer mpElement;
+            const Element * mpElement;
             std::size_t mElementSide;
         };
 
@@ -179,7 +181,7 @@ public:
                 ConditionToElement::const_iterator it = face_to_element_map.find(nodes_id);
 
                 if( it == face_to_element_map.end() )
-                    face_to_element_map[nodes_id] = {(* it_p_element),i};
+                    face_to_element_map[nodes_id] = {(* it_p_element).get(),i};
                 else
                     face_to_element_map.erase(it);
             }
@@ -189,7 +191,7 @@ public:
 
 
         //loop over overset conditions
-        for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetCondition3Ds.ptr_begin(); it_p_condition != mOversetCondition3Ds.ptr_end(); it_p_condition = std::next(it_p_condition) )
+        for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetConditions.ptr_begin(); it_p_condition != mOversetConditions.ptr_end(); it_p_condition = std::next(it_p_condition) )
         {
             const Condition::GeometryType & r_nodes = (* it_p_condition)->GetGeometry();
 
@@ -207,12 +209,12 @@ public:
                 exit(EXIT_FAILURE);
             }
 
-            OversetCondition3D * p_overset_condition = dynamic_cast<OversetCondition3D *> ((* it_p_condition).get());
+            OversetCondition * p_overset_condition = dynamic_cast<OversetCondition *> ((* it_p_condition).get());
 
             if ( ! p_overset_condition )
             {
                 //throw error please
-                std::cout<<__func__<<": wrong! not OversetCondition3D"<<std::endl;
+                std::cout<<__func__<<": wrong! not OversetCondition"<<std::endl;
                 exit(EXIT_FAILURE);
             }
 
@@ -220,43 +222,43 @@ public:
         }
     }
 
-    const ModelPart::ConditionsContainerType & OversetCondition3Ds() const
-    { return mOversetCondition3Ds; }
+    const ModelPart::ConditionsContainerType & rOversetConditions() const
+    { return mOversetConditions; }
 
     void GenerateHinges()
     {
         std::size_t num_overset_condition = 0;
         std::size_t num_hinge = 0;
 
-        for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetCondition3Ds.ptr_begin(); it_p_condition != mOversetCondition3Ds.ptr_end(); it_p_condition = std::next(it_p_condition) )
+        for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetConditions.ptr_begin(); it_p_condition != mOversetConditions.ptr_end(); it_p_condition = std::next(it_p_condition) )
         {
-            OversetCondition3D * p_overset_condition = dynamic_cast<OversetCondition3D *> ((* it_p_condition).get());
+            OversetCondition * p_overset_condition = dynamic_cast<OversetCondition *> ((* it_p_condition).get());
 
             if ( ! p_overset_condition )
             {
                 //throw error please
-                std::cout<<__func__<<"wrong! not OversetCondition3D *"<<std::endl;
+                std::cout<<__func__<<"wrong! not OversetCondition *"<<std::endl;
                 exit(EXIT_FAILURE);
             }
 
             p_overset_condition->GenerateHinges();
 
             num_overset_condition++;
-            num_hinge += p_overset_condition->Hinge3Ds().size();
+            num_hinge += p_overset_condition->NumberOfHinges();
         }
 
         std::cout<<__func__<<": num_overset_condition "<<num_overset_condition<<", num_hinge "<<num_hinge<<std::endl;
     }
 
-    void GenerateHingeDonorRelation()
+    void SearchHingesDonor()
     {
         //
-        struct HingeId
+        struct HingeKey
         {
-            OversetCondition3D::IndexType mConditionId;
+            OversetCondition::IndexType mConditionId;
             std::size_t mHingLocalId;
 
-            bool operator< (const HingeId & r_other ) const
+            bool operator< (const HingeKey & r_other ) const
             {
                 if( mConditionId < r_other.mConditionId )
                     return true;
@@ -269,15 +271,15 @@ public:
             }
         };
 
-        using HingeToAssignmentVectorMap = std::map<HingeId,std::vector<PointSearchAssignmentKey>>;
+        using HingeToAssignmentVectorMap = std::map<HingeKey,std::vector<PointSearchAssignmentKey>>;
 
         HingeToAssignmentVectorMap hinge_to_assignments_map;
 
-        for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetCondition3Ds.ptr_begin(); it_p_condition != mOversetCondition3Ds.ptr_end(); it_p_condition = std::next(it_p_condition) )
+        for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetConditions.ptr_begin(); it_p_condition != mOversetConditions.ptr_end(); it_p_condition = std::next(it_p_condition) )
         {
-            OversetCondition3D * p_overset_condition = dynamic_cast<OversetCondition3D *> ((* it_p_condition).get());
+            OversetCondition * p_overset_condition = dynamic_cast<OversetCondition *> ((* it_p_condition).get());
 
-            OversetCondition3D::IndexType condition_id = p_overset_condition->GetId();
+            OversetCondition::IndexType condition_id = p_overset_condition->GetId();
 
             //add search assignment
             std::size_t condition_block_id = p_overset_condition->MeshBlockId();
@@ -290,7 +292,7 @@ public:
                 {
                     for( const PointSearcherKey & r_searcher_key : r_pair.second )
                     {
-                        for( std::size_t i_hinge = 0; i_hinge < p_overset_condition->Hinge3Ds().size(); i_hinge++ )
+                        for( std::size_t i_hinge = 0; i_hinge < p_overset_condition->NumberOfHinges(); i_hinge++ )
                         {  
                             const Vector hinge_coordinate = p_overset_condition->HingeGlobalCoordinate(i_hinge);
 
@@ -298,7 +300,7 @@ public:
                             PointSearchAssignmentKey search_assignment_key = mpPointSearchMethod->AddSearch( r_searcher_key, {hinge_coordinate[0], hinge_coordinate[1], hinge_coordinate[2]} );
 
                             //associate search assigment with hinge
-                            HingeId hinge_key{condition_id,i_hinge};
+                            HingeKey hinge_key{condition_id,i_hinge};
                             hinge_to_assignments_map[hinge_key].push_back(search_assignment_key);
                         }
                     }
@@ -319,7 +321,7 @@ public:
         }
 
         //get search result mapped by assignment key
-        std::map<PointSearchAssignmentKey,DonorInfo,PointSearchAssignmentKey::LessThanComparator> donor_info_map;
+        std::map<PointSearchAssignmentKey,PointSearchOutput,PointSearchAssignmentKey::LessThanComparator> donor_info_map;
 
         for( const auto & r_donor_info_data : donor_info_data_vector )
         {
@@ -327,15 +329,15 @@ public:
         }
 
         // get donor result for hinges
-        for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetCondition3Ds.ptr_begin(); it_p_condition != mOversetCondition3Ds.ptr_end(); it_p_condition = std::next(it_p_condition) )
+        for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetConditions.ptr_begin(); it_p_condition != mOversetConditions.ptr_end(); it_p_condition = std::next(it_p_condition) )
         {
-            OversetCondition3D * p_overset_condition = dynamic_cast<OversetCondition3D *> ((* it_p_condition).get());
+            OversetCondition * p_overset_condition = dynamic_cast<OversetCondition *> ((* it_p_condition).get());
 
-            OversetCondition3D::IndexType condition_id = p_overset_condition->GetId();
+            OversetCondition::IndexType condition_id = p_overset_condition->GetId();
 
-            for( std::size_t i_hinge = 0; i_hinge < p_overset_condition->Hinge3Ds().size(); i_hinge++ )
+            for( std::size_t i_hinge = 0; i_hinge < p_overset_condition->NumberOfHinges(); i_hinge++ )
             {
-                Vector hinge_coordiate = p_overset_condition->HingeGlobalCoordinate(i_hinge);
+                PointType hinge_coordiate = p_overset_condition->HingeGlobalCoordinate(i_hinge);
 
                 printf("hinge %lu, block_Id %lu, (%lg, %lg, %lg)\n", 
                     i_hinge,
@@ -345,7 +347,7 @@ public:
                     hinge_coordiate[2] );
 
                 //
-                HingeId hinge_key{condition_id,i_hinge};
+                HingeKey hinge_key{condition_id,i_hinge};
                 HingeToAssignmentVectorMap::iterator it_assignment_key = hinge_to_assignments_map.find(hinge_key);
 
                 if( it_assignment_key == hinge_to_assignments_map.end() )
@@ -369,27 +371,27 @@ public:
                     }
 
                     //
-                    DonorInfo donor_info = it_donor_info->second;
+                    PointSearchOutput donor_info = it_donor_info->second;
                     if( donor_info.mFound )
                     {
                         //dangerous write access to hinge
-                        Hinge3D & r_hinge =  p_overset_condition->rHinge3D(i_hinge);
+                        HingeDonorInfo & r_hinge_donor_info =  p_overset_condition->rHingeDonorInfo(i_hinge);
 
-                        r_hinge.rDonorModelPartId()              = donor_info.mDonorModelPartId;
-                        r_hinge.rDonorElementId()                = donor_info.mDonorElementId;
-                        r_hinge.rDonorNodesId()                  = donor_info.mDonorNodesId;
-                        r_hinge.rDonorBarycentricCoordinate()[0] = donor_info.mDonorBarycentricCoordinate[0];
-                        r_hinge.rDonorBarycentricCoordinate()[1] = donor_info.mDonorBarycentricCoordinate[1];
-                        r_hinge.rDonorBarycentricCoordinate()[2] = donor_info.mDonorBarycentricCoordinate[2];
+                        r_hinge_donor_info.mModelPartId              = donor_info.mModelPartId;
+                        r_hinge_donor_info.mElementId                = donor_info.mElementId;
+                        r_hinge_donor_info.mNodesId                  = donor_info.mNodesId;
+                        r_hinge_donor_info.mBarycentricCoordinate[0] = donor_info.mBarycentricCoordinate[0];
+                        r_hinge_donor_info.mBarycentricCoordinate[1] = donor_info.mBarycentricCoordinate[1];
+                        r_hinge_donor_info.mBarycentricCoordinate[2] = donor_info.mBarycentricCoordinate[2];
 
                         printf("donor %lu (%lg, %lg, %lg), (%lg, %lg, %lg), found %d, distance %.10e \n", 
-                            donor_info.mDonorMeshBlockId,
-                            donor_info.mInterpolatedCoordinate.mCoordinate[0],
-                            donor_info.mInterpolatedCoordinate.mCoordinate[1],
-                            donor_info.mInterpolatedCoordinate.mCoordinate[2],
-                            donor_info.mDonorBarycentricCoordinate[0],
-                            donor_info.mDonorBarycentricCoordinate[1],
-                            donor_info.mDonorBarycentricCoordinate[2],
+                            donor_info.mMeshBlockId,
+                            donor_info.mInterpolatedCoordinate[0],
+                            donor_info.mInterpolatedCoordinate[1],
+                            donor_info.mInterpolatedCoordinate[2],
+                            donor_info.mBarycentricCoordinate[0],
+                            donor_info.mBarycentricCoordinate[1],
+                            donor_info.mBarycentricCoordinate[2],
                             donor_info.mFound,
                             donor_info.mDistance );
 
@@ -408,15 +410,15 @@ public:
         }
     }
 
-    void InterpolateHingeData()
+    void InterpolateHingesDonorData()
     {
         //
-        struct HingeId
+        struct HingeKey
         {
-            OversetCondition3D::IndexType mConditionId;
+            OversetCondition::IndexType mConditionId;
             std::size_t mHingLocalId;
 
-            bool operator< (const HingeId & r_other ) const
+            bool operator< (const HingeKey & r_other ) const
             {
                 if( mConditionId < r_other.mConditionId )
                     return true;
@@ -429,31 +431,31 @@ public:
             }
         };
 
-        using HingeToAssignmentVectorMap = std::map<HingeId,std::vector<InterpolationAssignmentKey>>;
+        using HingeToAssignmentVectorMap = std::map<HingeKey,std::vector<InterpolationAssignmentKey>>;
 
         HingeToAssignmentVectorMap hinge_to_assignments_map;
 
-        for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetCondition3Ds.ptr_begin(); it_p_condition != mOversetCondition3Ds.ptr_end(); it_p_condition = std::next(it_p_condition) )
+        for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetConditions.ptr_begin(); it_p_condition != mOversetConditions.ptr_end(); it_p_condition = std::next(it_p_condition) )
         {
-            OversetCondition3D * p_overset_condition = dynamic_cast<OversetCondition3D *> ((* it_p_condition).get());
+            OversetCondition * p_overset_condition = dynamic_cast<OversetCondition *> ((* it_p_condition).get());
 
-            OversetCondition3D::IndexType condition_id = p_overset_condition->GetId();
+            OversetCondition::IndexType condition_id = p_overset_condition->GetId();
 
             //add interpolation assignment
-            for( std::size_t i_hinge = 0; i_hinge < p_overset_condition->Hinge3Ds().size(); i_hinge++ )
+            for( std::size_t i_hinge = 0; i_hinge < p_overset_condition->NumberOfHinges(); i_hinge++ )
             {
                 InterpolationInput interpolation_input;
 
                 //dangerous write access to hinge
-                Hinge3D & r_hinge =  p_overset_condition->rHinge3D(i_hinge);
+                HingeDonorInfo & r_hinge_donor_info =  p_overset_condition->rHingeDonorInfo(i_hinge);
 
-                interpolation_input.mElementId                = r_hinge.rDonorElementId();
-                interpolation_input.mNodesId                  = r_hinge.rDonorNodesId();
-                interpolation_input.mBarycentricCoordinate[0] = r_hinge.rDonorBarycentricCoordinate()[0];
-                interpolation_input.mBarycentricCoordinate[1] = r_hinge.rDonorBarycentricCoordinate()[1];
-                interpolation_input.mBarycentricCoordinate[2] = r_hinge.rDonorBarycentricCoordinate()[2];
+                const std::size_t donor_model_part_id = r_hinge_donor_info.mModelPartId;
 
-                const std::size_t donor_model_part_id = r_hinge.rDonorModelPartId();
+                interpolation_input.mElementId                = r_hinge_donor_info.mElementId;
+                interpolation_input.mNodesId                  = r_hinge_donor_info.mNodesId;
+                interpolation_input.mBarycentricCoordinate[0] = r_hinge_donor_info.mBarycentricCoordinate[0];
+                interpolation_input.mBarycentricCoordinate[1] = r_hinge_donor_info.mBarycentricCoordinate[1];
+                interpolation_input.mBarycentricCoordinate[2] = r_hinge_donor_info.mBarycentricCoordinate[2];
                 
                 //very bad!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 //  assume interpolator has the same contractor key as dummy_model_part_holder
@@ -463,7 +465,7 @@ public:
                 InterpolationAssignmentKey interpolation_assignment_key = mpInterpolationMethod->AddInterpolationAssignment( r_interpolator_key, interpolation_input );
 
                 //associate search assigment with hinge
-                HingeId hinge_key{condition_id,i_hinge};
+                HingeKey hinge_key{condition_id,i_hinge};
                 hinge_to_assignments_map[hinge_key].push_back(interpolation_assignment_key);
             }
         }
@@ -472,28 +474,28 @@ public:
         mpInterpolationMethod->ExecuteAllInterpolationAssignments();
 
         //get search result
-        std::vector<InterpolationMethod::InterpolationAssignmentOutputData> hinge_data_data_vector;
-        mpInterpolationMethod->GetInterpolationResults( hinge_data_data_vector );
+        std::vector<InterpolationMethod::InterpolationAssignmentOutputData> hinge_donor_data_data_vector;
+        mpInterpolationMethod->GetInterpolationResults( hinge_donor_data_data_vector );
 
 
         //get search result mapped by assignment key
-        std::map<InterpolationAssignmentKey,HingeData,InterpolationAssignmentKey::LessThanComparator> hinge_data_map;
+        std::map<InterpolationAssignmentKey,InterpolationOutput,InterpolationAssignmentKey::LessThanComparator> hinge_donor_data_map;
 
-        for( const auto & r_hinge_data_data : hinge_data_data_vector )
+        for( const auto & r_hinge_donor_data_data : hinge_donor_data_data_vector )
         {
-            hinge_data_map[r_hinge_data_data.GetAssignmentKey()] = r_hinge_data_data.GetData();
+            hinge_donor_data_map[r_hinge_donor_data_data.GetAssignmentKey()] = r_hinge_donor_data_data.GetData();
         }
 
         // get result for hinges_data
-        for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetCondition3Ds.ptr_begin(); it_p_condition != mOversetCondition3Ds.ptr_end(); it_p_condition = std::next(it_p_condition) )
+        for( ModelPart::ConditionsContainerType::ptr_const_iterator it_p_condition = mOversetConditions.ptr_begin(); it_p_condition != mOversetConditions.ptr_end(); it_p_condition = std::next(it_p_condition) )
         {
-            OversetCondition3D * p_overset_condition = dynamic_cast<OversetCondition3D *> ((* it_p_condition).get());
+            OversetCondition * p_overset_condition = dynamic_cast<OversetCondition *> ((* it_p_condition).get());
 
-            OversetCondition3D::IndexType condition_id = p_overset_condition->GetId();
+            OversetCondition::IndexType condition_id = p_overset_condition->GetId();
 
-            for( std::size_t i_hinge = 0; i_hinge < p_overset_condition->Hinge3Ds().size(); i_hinge++ )
+            for( std::size_t i_hinge = 0; i_hinge < p_overset_condition->NumberOfHinges(); i_hinge++ )
             {
-                Vector hinge_coordiate = p_overset_condition->HingeGlobalCoordinate(i_hinge);
+                PointType hinge_coordiate = p_overset_condition->HingeGlobalCoordinate(i_hinge);
 
                 printf("hinge %lu, block_Id %lu, (%lg, %lg, %lg)\n", 
                     i_hinge,
@@ -503,7 +505,7 @@ public:
                     hinge_coordiate[2] );
 
                 //
-                HingeId hinge_key{condition_id,i_hinge};
+                HingeKey hinge_key{condition_id,i_hinge};
                 HingeToAssignmentVectorMap::iterator it_assignment_key = hinge_to_assignments_map.find(hinge_key);
 
                 if( it_assignment_key == hinge_to_assignments_map.end() )
@@ -517,16 +519,16 @@ public:
                 for( const auto & assignment_key : assignment_key_vector )
                 {
                     //
-                    auto it_hinge_data = hinge_data_map.find(assignment_key);
+                    auto it_hinge_data = hinge_donor_data_map.find(assignment_key);
 
-                    if( it_hinge_data == hinge_data_map.end() )
+                    if( it_hinge_data == hinge_donor_data_map.end() )
                     {
-                        std::cout<<__func__<<"wrong! hinge_data_map"<<std::endl;
+                        std::cout<<__func__<<"wrong! hinge_donor_data_map"<<std::endl;
                         exit(EXIT_FAILURE);
                     }
 
                     //
-                    HingeData hinge_data = it_hinge_data->second;
+                    InterpolationOutput hinge_data = it_hinge_data->second;
 
                     printf("donor (%lg, %lg, %lg) \n", 
                         hinge_data.mCoordinate[0],
@@ -546,7 +548,7 @@ private:
     std::map<std::size_t,Key> mModelPartIdToKey;
     PointSearchMethod * mpPointSearchMethod;
     InterpolationMethod * mpInterpolationMethod;
-    ModelPart::ConditionsContainerType mOversetCondition3Ds;
+    ModelPart::ConditionsContainerType mOversetConditions;
 };
 
 }//namespace OverserAssembly

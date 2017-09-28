@@ -1,15 +1,16 @@
-#if !defined(KRATOS_OVERSET_HINGEDATA_H_INCLUDED )
-#define  KRATOS_OVERSET_HINGEDATA_H_INCLUDED
+#if !defined(KRATOS_OVERSET_POINTSEARCHINPUT_H_INCLUDED )
+#define  KRATOS_OVERSET_POINTSEARCHINPUT_H_INCLUDED
 
 namespace Kratos
 {
 namespace OversetAssembly
 {
 
-struct HingeData
+struct PointSearchInput
 {
 public:
     double mCoordinate[3];
+    std::size_t mMeshBlockId;
 
 private:
     void Save( DistributedAssignment::DataUtility::Serializer & r_serializer ) const
@@ -17,6 +18,7 @@ private:
         r_serializer.Save(mCoordinate[0]);
         r_serializer.Save(mCoordinate[1]);
         r_serializer.Save(mCoordinate[2]);
+        r_serializer.Save(mMeshBlockId);
     }
 
     void Load( DistributedAssignment::DataUtility::Serializer & r_serializer )
@@ -24,6 +26,7 @@ private:
         r_serializer.Load(mCoordinate[0]);
         r_serializer.Load(mCoordinate[1]);
         r_serializer.Load(mCoordinate[2]);
+        r_serializer.Load(mMeshBlockId);
     }
 
     void Profile( DistributedAssignment::DataUtility::DataProfile & r_profile ) const
@@ -33,10 +36,11 @@ private:
 
     void Print( const DistributedAssignment::DataUtility::DataPrinter & r_printer ) const
     {
-        std::cout << "{HingeData: ";
+        std::cout << "{PointSearchInput: ";
         r_printer.Print(mCoordinate[0]);
         r_printer.Print(mCoordinate[1]);
         r_printer.Print(mCoordinate[2]);
+        r_printer.Print(mMeshBlockId);
         std::cout << "},";
     }
 

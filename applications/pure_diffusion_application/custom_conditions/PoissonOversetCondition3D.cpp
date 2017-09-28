@@ -21,7 +21,7 @@ namespace Kratos
 //************************************************************************************
 //************************************************************************************
 PoissonOversetCondition3D::PoissonOversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry)
-	: 	OversetCondition3D(NewId, pGeometry)
+	: 	OversetCondition(NewId, pGeometry)
 {		
 	//DO NOT ADD DOFS HERE!!!
 }
@@ -29,7 +29,7 @@ PoissonOversetCondition3D::PoissonOversetCondition3D(IndexType NewId, GeometryTy
 //************************************************************************************
 //************************************************************************************
 PoissonOversetCondition3D::PoissonOversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry,  PropertiesType::Pointer pProperties)
-	: 	OversetCondition3D(NewId, pGeometry, pProperties)
+	: 	OversetCondition(NewId, pGeometry, pProperties)
 {}
 
 //************************************************************************************

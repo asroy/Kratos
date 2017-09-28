@@ -10,7 +10,7 @@
 
 #include "custom_utilities/DistributedAssignment.h"
 #include "custom_utilities/InterpolationInput.h"
-#include "custom_conditions/HingeData.h"
+#include "custom_utilities/InterpolationOutput.h"
 
 namespace Kratos
 {
@@ -22,6 +22,8 @@ class Interpolator
 public:
     using Location = DistributedAssignment::Communication::MpiLocation;
     using InterpolatorKey = DistributedAssignment::DistributedAssignment::DistributedKey<Location>;
+
+    using PointType = Point<3>;
 
 public:
     Interpolator() = delete;
@@ -45,22 +47,24 @@ public:
     InterpolatorKey Key() const
     { return mKey; }
 
-    void Execute( const InterpolationInput & r_interpolation_input, HingeData & r_hinge_data )
+    void Execute( const InterpolationInput & r_input, InterpolationOutput & r_output )
     {
-        const ModelPart::ElementType::IndexType element_id = r_interpolation_input.mElementId;
+        const ModelPart::ElementType::IndexType element_id = r_input.mElementId;
 
-        const ModelPart::ElementType::GeometryType & r_geometry = const_cast<ModelPart &> (mrModelPart).GetElement(element_id).GetGeometry();
+        const ModelPart::ElementType & r_element = const_cast<ModelPart &> (mrModelPart).GetElement(element_id);
+        
+        const ModelPart::ElementType::GeometryType & r_geometry = r_element.GetGeometry();
 
-        //check
+        //check if node_id match
         {
             std::cout<<__func__<<": donor_node_id: "<<std::endl;
             
             std::size_t i = 0;
             for( const auto & r_node : r_geometry )
             {
-                std::cout<<r_node.GetId()<<", "<<r_interpolation_input.mNodesId[i]<<std::endl;
+                std::cout<<r_node.GetId()<<", "<<r_input.mNodesId[i]<<std::endl;
 
-                if( r_node.GetId() != r_interpolation_input.mNodesId[i] )
+                if( r_node.GetId() != r_input.mNodesId[i] )
                 {
                     std::cout<<__func__<<"wrong! element_id and Nodes_id not match!"<<std::endl;
                     exit(EXIT_FAILURE);
@@ -70,22 +74,12 @@ public:
             }
         }
 
-        Vector Ns(r_geometry.size());
+        //
+        const PointType point{ r_input.mBarycentricCoordinate[0],
+                               r_input.mBarycentricCoordinate[1],
+                               r_input.mBarycentricCoordinate[2] };
 
-        Point<3> point{ r_interpolation_input.mBarycentricCoordinate[0],
-                        r_interpolation_input.mBarycentricCoordinate[1],
-                        r_interpolation_input.mBarycentricCoordinate[2] };
-
-        r_geometry.ShapeFunctionsValues(Ns, point);
-
-        Vector r_coordinate(3);
-        noalias(r_coordinate) = ZeroVector(3);
-        for(std::size_t i = 0; i < r_geometry.size(); i++ )
-            noalias(r_coordinate) += Ns[i]*r_geometry[i];
-
-        r_hinge_data.mCoordinate[0] = r_coordinate[0];
-        r_hinge_data.mCoordinate[1] = r_coordinate[1];
-        r_hinge_data.mCoordinate[2] = r_coordinate[2];
+        r_output.InterpolateDataFromElement( point, r_element );
     }
 
 private:
