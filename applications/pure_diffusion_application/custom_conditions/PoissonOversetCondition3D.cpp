@@ -83,25 +83,42 @@ void PoissonOversetCondition3D::CalculateLocalSystem(MatrixType& rLeftHandSideMa
 	KRATOS_CATCH("")
 }
 
-
-//************************************************************************************
-//************************************************************************************
-void PoissonOversetCondition3D::EquationIdVector(EquationIdVectorType& rResult, ProcessInfo& CurrentProcessInfo)
+void PoissonOversetCondition3D::LocalEquationIdVector(EquationIdVectorType& rResult, ProcessInfo & rCurrentProcessInfo)
 {
-	int number_of_nodes = GetGeometry().PointsNumber();
-	unsigned int index;
-	unsigned int dim = 1;
-	rResult.resize(number_of_nodes*dim);
-	for (int i=0;i<number_of_nodes;i++)
-	{
-		index = i*dim;
-		rResult[index] = (GetGeometry()[i].GetDof(TEMPERATURE).EquationId());			
-	}
+	std::size_t num_node = GetGeometry().size();
+    rResult.resize(num_node);
+    
+	for (std::size_t i = 0; i < num_node; i++)
+		rResult[i] = (GetGeometry()[i].GetDof(TEMPERATURE).EquationId());			
+}
+
+void PoissonOversetCondition3D::DonorEquationIdVector(EquationIdVectorType& rResult, ProcessInfo & rCurrentProcessInfo)
+{
+    std::size_t num_dof = 0;
+
+    for(std::size_t i_hinge = 0; i_hinge < NumberOfHinges(); i_hinge++ )
+    {
+        num_dof += rHingeDonorData(i_hinge).mEquationsId.size();
+    }
+
+    rResult.resize(num_dof);
+
+    std::size_t i = 0;
+    for(std::size_t i_hinge = 0; i_hinge < NumberOfHinges(); i_hinge++ )
+    {
+        const OversetAssembly::HingeDonorData & r_hinge_donor_data = rHingeDonorData(i_hinge);
+
+        for( std::size_t j = 0; j < r_hinge_donor_data.mEquationsId.size(); j++ )
+        {
+            rResult[i] = r_hinge_donor_data.mEquationsId[j];
+            i++;
+        }
+    }
 }
 
 //************************************************************************************
 //************************************************************************************
-	void PoissonOversetCondition3D::GetDofList(DofsVectorType& ConditionalDofList,ProcessInfo& CurrentProcessInfo)
+void PoissonOversetCondition3D::GetDofList(DofsVectorType& ConditionalDofList,ProcessInfo& CurrentProcessInfo)
 {
 	unsigned int dim = 1;
 	ConditionalDofList.resize(GetGeometry().size()*dim);

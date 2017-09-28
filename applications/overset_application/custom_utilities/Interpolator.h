@@ -57,19 +57,14 @@ public:
 
         //check if node_id match
         {
-            std::cout<<__func__<<": donor_node_id: "<<std::endl;
-            
             std::size_t i = 0;
             for( const auto & r_node : r_geometry )
             {
-                std::cout<<r_node.GetId()<<", "<<r_input.mNodesId[i]<<std::endl;
-
                 if( r_node.GetId() != r_input.mNodesId[i] )
                 {
                     std::cout<<__func__<<"wrong! element_id and Nodes_id not match!"<<std::endl;
                     exit(EXIT_FAILURE);
                 }
-
                 i++;
             }
         }

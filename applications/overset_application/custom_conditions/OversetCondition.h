@@ -48,6 +48,12 @@ public:
 
     Condition::Pointer Create(IndexType NewId, NodesArrayType const & ThisNodes, PropertiesType::Pointer pProperties) const override;
 
+    void EquationIdVector(EquationIdVectorType & rResult, ProcessInfo & rCurrentProcessInfo) override;
+
+    virtual void LocalEquationIdVector(EquationIdVectorType & rResult, ProcessInfo & rCurrentProcessInfo);
+
+    virtual void DonorEquationIdVector(EquationIdVectorType & rResult, ProcessInfo & rCurrentProcessInfo);
+
     void GenerateHinges();
 
     const std::size_t NumberOfHinges() const;

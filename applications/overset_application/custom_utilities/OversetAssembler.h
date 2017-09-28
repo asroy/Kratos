@@ -474,16 +474,16 @@ public:
         mpInterpolationMethod->ExecuteAllInterpolationAssignments();
 
         //get search result
-        std::vector<InterpolationMethod::InterpolationAssignmentOutputData> hinge_donor_data_data_vector;
-        mpInterpolationMethod->GetInterpolationResults( hinge_donor_data_data_vector );
+        std::vector<InterpolationMethod::InterpolationAssignmentOutputData> interpolation_output_data_vector;
+        mpInterpolationMethod->GetInterpolationResults( interpolation_output_data_vector );
 
 
         //get search result mapped by assignment key
-        std::map<InterpolationAssignmentKey,InterpolationOutput,InterpolationAssignmentKey::LessThanComparator> hinge_donor_data_map;
+        std::map<InterpolationAssignmentKey,InterpolationOutput,InterpolationAssignmentKey::LessThanComparator> interpolation_output_map;
 
-        for( const auto & r_hinge_donor_data_data : hinge_donor_data_data_vector )
+        for( const auto & r_interpolation_output_data : interpolation_output_data_vector )
         {
-            hinge_donor_data_map[r_hinge_donor_data_data.GetAssignmentKey()] = r_hinge_donor_data_data.GetData();
+            interpolation_output_map[r_interpolation_output_data.GetAssignmentKey()] = r_interpolation_output_data.GetData();
         }
 
         // get result for hinges_data
@@ -516,24 +516,33 @@ public:
 
                 std::vector<InterpolationAssignmentKey> assignment_key_vector = it_assignment_key->second;
 
-                for( const auto & assignment_key : assignment_key_vector )
+                for( const auto & r_assignment_key : assignment_key_vector )
                 {
                     //
-                    auto it_hinge_data = hinge_donor_data_map.find(assignment_key);
+                    auto it_interpolation_output = interpolation_output_map.find(r_assignment_key);
 
-                    if( it_hinge_data == hinge_donor_data_map.end() )
+                    if( it_interpolation_output == interpolation_output_map.end() )
                     {
                         std::cout<<__func__<<"wrong! hinge_donor_data_map"<<std::endl;
                         exit(EXIT_FAILURE);
                     }
 
                     //
-                    InterpolationOutput hinge_data = it_hinge_data->second;
+                    InterpolationOutput & r_interpolation_output = it_interpolation_output->second;
 
-                    printf("donor (%lg, %lg, %lg) \n", 
-                        hinge_data.mCoordinate[0],
-                        hinge_data.mCoordinate[1],
-                        hinge_data.mCoordinate[2] );
+                    HingeDonorData & r_hinge_donor_data = p_overset_condition->rHingeDonorData(i_hinge);
+
+                    r_hinge_donor_data.mEquationsId = r_interpolation_output.mEquationsId;
+                    r_hinge_donor_data.mNs          = r_interpolation_output.mNs;
+                    r_hinge_donor_data.mDNsDXs      = r_interpolation_output.mDNsDXs;
+                    r_hinge_donor_data.mTemperature = r_interpolation_output.mTemperature;
+                    r_hinge_donor_data.mCoordinate  = r_interpolation_output.mCoordinate;
+
+                    printf("donor (%lg, %lg, %lg), temp %lg\n", 
+                        r_hinge_donor_data.mCoordinate[0],
+                        r_hinge_donor_data.mCoordinate[1],
+                        r_hinge_donor_data.mCoordinate[2],
+                        r_hinge_donor_data.mTemperature );
                 }
             }
         }

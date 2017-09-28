@@ -55,6 +55,41 @@ Condition::Pointer OversetCondition::Create(IndexType NewId, NodesArrayType cons
     return Condition::Pointer(new OversetCondition(NewId, GetGeometry().Create(ThisNodes), pProperties));
 }
 
+void OversetCondition::EquationIdVector(EquationIdVectorType& rResult, ProcessInfo & rCurrentProcessInfo)
+{
+    EquationIdVectorType local_equations_id;
+    EquationIdVectorType donor_equations_id;
+
+    LocalEquationIdVector(local_equations_id, rCurrentProcessInfo);
+    DonorEquationIdVector(donor_equations_id, rCurrentProcessInfo);
+
+    rResult.resize(local_equations_id.size()+donor_equations_id.size());
+    
+    std::size_t i = 0;
+
+    for( std::size_t j = 0; j < local_equations_id.size(); j++ )
+    {
+        rResult[i] = local_equations_id[j];
+        i++;
+    }
+
+    for( std::size_t j = 0; j < donor_equations_id.size(); j++ )
+    {
+        rResult[i] = donor_equations_id[j];
+        i++;
+    }
+}
+
+void OversetCondition::LocalEquationIdVector(EquationIdVectorType& rResult, ProcessInfo & rCurrentProcessInfo)
+{
+    KRATOS_ERROR << "Calling base class 'LocalEquationIdVector' method instead of derived class one. Please check the definition of derived class. " << *this << std::endl;
+}
+
+void OversetCondition::DonorEquationIdVector(EquationIdVectorType& rResult, ProcessInfo & rCurrentProcessInfo)
+{
+    KRATOS_ERROR << "Calling base class 'DonorEquationIdVector' method instead of derived class one. Please check the definition of derived class. " << *this << std::endl;
+}
+
 void OversetCondition::GenerateHinges()
 {
     mHinges.clear();

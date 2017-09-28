@@ -6,8 +6,9 @@ namespace Kratos
 namespace OversetAssembly
 {
 
-class HingeDonorData
+struct HingeDonorData
 {
+    std::vector<std::size_t> mEquationsId;
     std::vector<double> mNs;
     std::vector<std::vector<double>> mDNsDXs;
     double mTemperature;
