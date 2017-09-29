@@ -93,11 +93,13 @@ void PoissonOversetCondition3D::CalculateLocalSystem(MatrixType& rLeftHandSideMa
 
 void PoissonOversetCondition3D::LocalEquationIdVector(EquationIdVectorType& rResult, ProcessInfo & rCurrentProcessInfo)
 {
-	std::size_t num_node = GetGeometry().size();
+	Element::GeometryType & r_nodes = const_cast<Element::GeometryType &> (rAdjacentElement().GetGeometry());
+	
+	std::size_t num_node = r_nodes.size();
     rResult.resize(num_node);
     
 	for (std::size_t i = 0; i < num_node; i++)
-		rResult[i] = (GetGeometry()[i].GetDof(TEMPERATURE).EquationId());			
+		rResult[i] = r_nodes[i].GetDof(TEMPERATURE).EquationId();			
 }
 
 void PoissonOversetCondition3D::DonorEquationIdVector(EquationIdVectorType& rResult, ProcessInfo & rCurrentProcessInfo)
