@@ -106,6 +106,7 @@ public:
 private:
     virtual void Save( DistributedAssignment::DataUtility::Serializer & r_serializer ) const
     {
+        r_serializer.Save(mEquationsId);
         r_serializer.Save(mNs);
         r_serializer.Save(mDNsDXs);
         r_serializer.Save(mTemperature);
@@ -115,6 +116,7 @@ private:
 
     virtual void Load( DistributedAssignment::DataUtility::Serializer & r_serializer )
     {
+        r_serializer.Load(mEquationsId);
         r_serializer.Load(mNs);
         r_serializer.Load(mDNsDXs);
         r_serializer.Load(mTemperature);
@@ -130,6 +132,7 @@ private:
     virtual void Print( const DistributedAssignment::DataUtility::DataPrinter & r_printer ) const
     {
         std::cout << "{InterpolationOutput: ";
+        r_printer.Print(mEquationsId);
         r_printer.Print(mNs);
         r_printer.Print(mDNsDXs);
         r_printer.Print(mTemperature);

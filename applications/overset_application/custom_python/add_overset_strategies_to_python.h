@@ -44,54 +44,39 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  
 //   
 //   Project Name:        Kratos       
-//   Last modified by:    $Author:  $
+//   Last Modified by:    $Author:  $
 //   Date:                $Date:  $
 //   Revision:            $Revision: 1.2 $
 //
 //
 
 
+#if !defined(KRATOS_OVERSET_STRATEGIES_PYTHON_H_INCLUDED )
+#define  KRATOS_OVERSET_STRATEGIES_PYTHON_H_INCLUDED
+
+
+
 // System includes 
 
 
 // External includes 
-#include <boost/python.hpp>
-#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-#include <boost/timer.hpp> 
+#include "boost/smart_ptr.hpp"
 
 
 // Project includes
 #include "includes/define.h"
-#include "custom_python/add_custom_strategies_to_python.h"
-
-#include "spaces/ublas_space.h"
-
-//strategies
-#include "solving_strategies/strategies/solving_strategy.h"
-
-//linear solvers
-#include "linear_solvers/linear_solver.h"
-
-//
-#include "custom_strategies/builder_and_solvers/overset_trilinos_block_builder_and_solver.h"
 
 
 namespace Kratos
 {
 
-	namespace Python
-	{		
-		using namespace boost::python;
+    namespace Python
+    {
 
-		void  AddCustomStrategiesToPython()
-		{
-			using OversetTrilinosBlockBuilderAndSolverType = OversetTrilinosBlockBuilderAndSolver< TrilinosSparseSpaceType, TrilinosLocalSpaceType, TrilinosLinearSolverType >;
-			class_< OversetTrilinosBlockBuilderAndSolverType,bases< TrilinosBlockBuilderAndSolverType >, boost::noncopyable >
-			( "OversetTrilinosBlockBuilderAndSolver", init<Epetra_MpiComm&, int, TrilinosLinearSolverType::Pointer, const OversetAssembly::OversetAssembler & > () )
-			;
-		}
+      void  AddOversetStrategiesToPython();
 
-	}  // namespace Python.
+    }  // namespace Python.
+  
+}  // namespace Kratos.
 
-} // Namespace Kratos
-
+#endif 

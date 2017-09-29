@@ -60,7 +60,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // Project includes 
 #include "includes/define.h"
 #include "overset_application.h"
-#include "custom_python/add_custom_strategies_to_python.h"
+#include "custom_python/add_overset_strategies_to_python.h"
 #include "custom_python/add_overset_utilities_to_python.h"
 
  
@@ -82,7 +82,7 @@ namespace Python
 			  bases<KratosApplication>, boost::noncopyable >("KratosOversetApplication")
 			;
 
-	AddCustomStrategiesToPython();
+	AddOversetStrategiesToPython();
 	AddOversetUtilitiesToPython();
 
 	//registering variables in python

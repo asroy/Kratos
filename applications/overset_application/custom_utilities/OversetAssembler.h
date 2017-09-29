@@ -543,16 +543,22 @@ public:
                     r_hinge_donor_data.mTemperature = r_interpolation_output.mTemperature;
                     r_hinge_donor_data.mCoordinate  = r_interpolation_output.mCoordinate;
 
-                    printf("donor (%lg, %lg, %lg), temp %lg\n", 
+                    printf("donor (%lg, %lg, %lg), temp %lg, # equation %lu\n", 
                         r_hinge_donor_data.mCoordinate[0],
                         r_hinge_donor_data.mCoordinate[1],
                         r_hinge_donor_data.mCoordinate[2],
-                        r_hinge_donor_data.mTemperature );
+                        r_hinge_donor_data.mTemperature,
+                        r_hinge_donor_data.mEquationsId.size()
+                     );
                 }
             }
         }
     }
-    
+
+
+    const ModelPart & rModelPart() const
+    { return mrModelPart; }
+
 private:
     const ModelPart & mrModelPart;
     OversetCommunicator mOversetCommunicator;

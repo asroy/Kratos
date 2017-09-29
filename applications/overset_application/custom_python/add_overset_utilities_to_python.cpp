@@ -75,6 +75,7 @@ namespace Python
 		class_<OversetAssembly::OversetAssembler, boost::noncopyable> ("OversetAssembler", init<const ModelPart &>())
 			.def("GenerateHinges", &OversetAssembly::OversetAssembler::GenerateHinges)
 			.def("SearchHingesDonor", &OversetAssembly::OversetAssembler::SearchHingesDonor)
+			.def("GetOversetConditionsDonorEquationsId", &OversetAssembly::OversetAssembler::GetOversetConditionsDonorEquationsId)
 			.def("InterpolateHingesDonorData", &OversetAssembly::OversetAssembler::InterpolateHingesDonorData);
 	}
 

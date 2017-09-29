@@ -48,7 +48,11 @@ void PoissonOversetCondition3D::CalculateRightHandSide(VectorType& rRightHandSid
 {
 	KRATOS_TRY
 
-	unsigned int matSize = GetGeometry().size();
+	EquationIdVectorType equations_id;
+
+	EquationIdVector(equations_id, rCurrentProcessInfo);
+
+	unsigned int matSize = equations_id.size();
 
 	if(rRightHandSideVector.size() != matSize)
 		rRightHandSideVector.resize(matSize,false);
@@ -66,7 +70,11 @@ void PoissonOversetCondition3D::CalculateLocalSystem(MatrixType& rLeftHandSideMa
 {
 	KRATOS_TRY
 
-	unsigned int matSize = GetGeometry().size();
+	EquationIdVectorType equations_id;
+
+	EquationIdVector(equations_id, rCurrentProcessInfo);
+
+	unsigned int matSize = equations_id.size();
 
 	if(rLeftHandSideMatrix.size1() != matSize)
 		rLeftHandSideMatrix.resize(matSize,matSize,false);
@@ -94,9 +102,6 @@ void PoissonOversetCondition3D::LocalEquationIdVector(EquationIdVectorType& rRes
 
 void PoissonOversetCondition3D::DonorEquationIdVector(EquationIdVectorType& rResult, ProcessInfo & rCurrentProcessInfo)
 {
-
-	std::cout<<__func__<<std::endl;
-	
     std::size_t num_dof = 0;
 
     for(std::size_t i_hinge = 0; i_hinge < NumberOfHinges(); i_hinge++ )
@@ -115,8 +120,6 @@ void PoissonOversetCondition3D::DonorEquationIdVector(EquationIdVectorType& rRes
         {
             rResult[i] = r_hinge_donor_data.mEquationsId[j];
 			i++;
-			
-			std::cout<<__func__<<"r_hinge_donor_data.mEquationsId[j] "<<r_hinge_donor_data.mEquationsId[j]<<std::endl;
         }
     }
 }
