@@ -61,7 +61,7 @@ class StaticPoissonSolverMPI:
         self.EpetraCommunicator = KratosTrilinos.CreateCommunicator()
 
         ## Creating the Trilinos time scheme
-        self.time_scheme = KratosTrilinos.TrilinosResidualBasedIncrementalUpdateStaticScheme()
+        self.time_scheme = KratosOverset.OversetTrilinosResidualBasedIncrementalUpdateStaticScheme(self.overset_assembler)
 
         ## Set the guess_row_size (guess about the number of zero entries) for the Trilinos builder and solver
         if self.model_part.ProcessInfo[KratosMultiphysics.DOMAIN_SIZE] == 3:
@@ -71,9 +71,9 @@ class StaticPoissonSolverMPI:
 
         ## Construct the Trilinos builder and solver
         self.builder_and_solver = KratosOverset.OversetTrilinosBlockBuilderAndSolver(self.EpetraCommunicator,
-                                                                               guess_row_size,
-                                                                               self.trilinos_linear_solver,
-                                                                               self.overset_assembler)
+                                                                                    guess_row_size,
+                                                                                    self.trilinos_linear_solver,
+                                                                                    self.overset_assembler)
 
 
         ## Construct strategy
@@ -146,7 +146,6 @@ class StaticPoissonSolverMPI:
     def Solve(self):
         self.overset_assembler.GenerateHinges()
         self.overset_assembler.SearchHingesDonor()
-        self.overset_assembler.GetOversetConditionsDonorEquationsId()
 
         print("overset_trilinos_pure_diffusion_solver::Solve")
         

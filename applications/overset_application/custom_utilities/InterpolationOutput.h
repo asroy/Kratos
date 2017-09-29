@@ -101,6 +101,12 @@ public:
         mCoordinate[0] = r_coordinate[0];
         mCoordinate[1] = r_coordinate[1];
         mCoordinate[2] = r_coordinate[2];
+
+        // {
+        //     std::cout<<__func__<<std::endl;
+        //     DistributedAssignment::DataUtility::DataPrinter printer;
+        //     printer.Print(mEquationsId);
+        // }
     }
 
 private:

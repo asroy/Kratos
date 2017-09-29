@@ -1,6 +1,6 @@
 /*
 ==============================================================================
-KratosOversetApplication 
+KratosTestApplication 
 A library based on:
 Kratos
 A General Purpose Software for Multi-Physics Finite Element Analysis
@@ -44,59 +44,39 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  
 //   
 //   Project Name:        Kratos       
-//   Last modified by:    $Author:  $
-//   Date:                $Date: $
-//   Revision:            $Revision: 1.3 $
+//   Last Modified by:    $Author:  $
+//   Date:                $Date:  $
+//   Revision:            $Revision: 1.2 $
 //
 //
+
+
+#if !defined(KRATOS_OVERSET_SCHEMES_PYTHON_H_INCLUDED )
+#define  KRATOS_OVERSET_SCHEMES_PYTHON_H_INCLUDED
+
+
 
 // System includes 
 
-#if defined(KRATOS_PYTHON)
-// External includes 
-#include <boost/python.hpp>
 
-// Project includes 
+// External includes 
+#include "boost/smart_ptr.hpp"
+
+
+// Project includes
 #include "includes/define.h"
 
-//
-#include "overset_application.h"
-#include "custom_python/add_overset_utilities_to_python.h"
-#include "custom_python/add_overset_strategies_to_python.h"
-#include "custom_python/add_overset_schemes_to_python.h"
 
- 
 namespace Kratos
 {
 
-namespace Python
-{
+    namespace Python
+    {
 
-  using namespace boost::python;
+      void  AddOversetSchemesToPython();
 
-
-  
-  BOOST_PYTHON_MODULE(KratosOversetApplication)
-  {
-
-	  class_<KratosOversetApplication, 
-			KratosOversetApplication::Pointer, 
-		    bases<KratosApplication>, boost::noncopyable >("KratosOversetApplication")
-			;
-
-	AddOversetUtilitiesToPython();
-	AddOversetStrategiesToPython();
-	AddOversetSchemesToPython();
-	
-	//registering variables in python
-//	KRATOS_REGISTER_IN_PYTHON_VARIABLE(NODAL_AREA);
-
-
-  }
-  
-  
-}  // namespace Python.
+    }  // namespace Python.
   
 }  // namespace Kratos.
 
-#endif // KRATOS_PYTHON defined
+#endif 

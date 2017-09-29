@@ -6,8 +6,14 @@ namespace Kratos
 namespace OversetAssembly
 {
 
-struct HingeDonorData
+class HingeDonorData
 {
+public:
+    HingeDonorData()
+        :   mInitialized{false}
+    {}
+
+    bool mInitialized;
     std::vector<std::size_t> mEquationsId;
     std::vector<double> mNs;
     std::vector<std::vector<double>> mDNsDXs;

@@ -13,6 +13,7 @@ set( KRATOS_OVERSET_APPLICATION_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/overset_python_application.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_overset_utilities_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_overset_strategies_to_python.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_overset_schemes_to_python.cpp
 )
 
 #find SplitTreeSearch library

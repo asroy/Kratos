@@ -102,6 +102,7 @@ void PoissonOversetCondition3D::LocalEquationIdVector(EquationIdVectorType& rRes
 
 void PoissonOversetCondition3D::DonorEquationIdVector(EquationIdVectorType& rResult, ProcessInfo & rCurrentProcessInfo)
 {
+
     std::size_t num_dof = 0;
 
     for(std::size_t i_hinge = 0; i_hinge < NumberOfHinges(); i_hinge++ )
@@ -116,12 +117,28 @@ void PoissonOversetCondition3D::DonorEquationIdVector(EquationIdVectorType& rRes
     {
         const OversetAssembly::HingeDonorData & r_hinge_donor_data = rHingeDonorData(i_hinge);
 
+		if( ! r_hinge_donor_data.mInitialized )
+		{
+			std::cout<<__func__<<"wrong! hinge donor data not Initialized"<<std::endl;
+			exit(EXIT_FAILURE);
+		}
+
         for( std::size_t j = 0; j < r_hinge_donor_data.mEquationsId.size(); j++ )
         {
             rResult[i] = r_hinge_donor_data.mEquationsId[j];
 			i++;
-        }
-    }
+
+		}
+	}
+
+	{
+		std::cout<<__func__<<": ";
+		
+		for( std::size_t j = 0; j < num_dof; j++ )
+			printf(" %lu ",rResult[j]);
+
+		std::cout<<std::endl;
+	}
 }
 
 //************************************************************************************
