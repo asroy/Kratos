@@ -502,12 +502,12 @@ public:
             {
                 PointType hinge_coordiate = p_overset_condition->HingeGlobalCoordinate(i_hinge);
 
-                printf("hinge %lu, block_Id %lu, (%lg, %lg, %lg)\n", 
-                    i_hinge,
-                    p_overset_condition->MeshBlockId(),
-                    hinge_coordiate[0],
-                    hinge_coordiate[1],
-                    hinge_coordiate[2] );
+                // printf("hinge %lu, block_Id %lu, (%lg, %lg, %lg)\n", 
+                //     i_hinge,
+                //     p_overset_condition->MeshBlockId(),
+                //     hinge_coordiate[0],
+                //     hinge_coordiate[1],
+                //     hinge_coordiate[2] );
 
                 //
                 HingeKey hinge_key{condition_id,i_hinge};
@@ -537,24 +537,25 @@ public:
 
                     HingeDonorData & r_hinge_donor_data = p_overset_condition->rHingeDonorData(i_hinge);
 
-                    r_hinge_donor_data.mInitialized = true;
-                    r_hinge_donor_data.mEquationsId = r_interpolation_output.mEquationsId;
-                    r_hinge_donor_data.mNs          = r_interpolation_output.mNs;
-                    r_hinge_donor_data.mDNsDXs      = r_interpolation_output.mDNsDXs;
-                    r_hinge_donor_data.mTemperature = r_interpolation_output.mTemperature;
-                    r_hinge_donor_data.mCoordinate  = r_interpolation_output.mCoordinate;
+                    r_hinge_donor_data.mInitialized  = true;
+                    r_hinge_donor_data.mEquationsId  = r_interpolation_output.mEquationsId;
+                    r_hinge_donor_data.mNs           = r_interpolation_output.mNs;
+                    r_hinge_donor_data.mDNsDXs       = r_interpolation_output.mDNsDXs;
+                    r_hinge_donor_data.mTemperature  = r_interpolation_output.mTemperature;
+                    r_hinge_donor_data.mTempGradient = r_interpolation_output.mTempGradient;
+                    r_hinge_donor_data.mCoordinate   = r_interpolation_output.mCoordinate;
 
-                    printf("donor (%lg, %lg, %lg), temp %lg, # equation %lu,", 
-                        r_hinge_donor_data.mCoordinate[0],
-                        r_hinge_donor_data.mCoordinate[1],
-                        r_hinge_donor_data.mCoordinate[2],
-                        r_hinge_donor_data.mTemperature,
-                        r_hinge_donor_data.mEquationsId.size()
-                    );
+                    // printf("donor (%lg, %lg, %lg), temp %lg, # equation %lu,", 
+                    //     r_hinge_donor_data.mCoordinate[0],
+                    //     r_hinge_donor_data.mCoordinate[1],
+                    //     r_hinge_donor_data.mCoordinate[2],
+                    //     r_hinge_donor_data.mTemperature,
+                    //     r_hinge_donor_data.mEquationsId.size()
+                    // );
 
-                    for(std::size_t i = 0; i < r_hinge_donor_data.mEquationsId.size(); i++ )
-                        printf(" %lu ",r_hinge_donor_data.mEquationsId[i]);
-                    printf("\n");
+                    // for(std::size_t i = 0; i < r_hinge_donor_data.mEquationsId.size(); i++ )
+                    //     printf(" %lu ",r_hinge_donor_data.mEquationsId[i]);
+                    // printf("\n");
                 }
             }
         }

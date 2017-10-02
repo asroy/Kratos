@@ -63,6 +63,7 @@ void OversetCondition::EquationIdVector(EquationIdVectorType& rResult, ProcessIn
     LocalEquationIdVector(local_equations_id, rCurrentProcessInfo);
     DonorEquationIdVector(donor_equations_id, rCurrentProcessInfo);
 
+    rResult.clear();
     rResult.resize(local_equations_id.size()+donor_equations_id.size());
     
     std::size_t i = 0;
@@ -149,6 +150,23 @@ void OversetCondition::SetAdjacentElementAndSide( const Element * const p_adjace
 const std::size_t OversetCondition::MeshBlockId() const
 {
     return mpAdjacentElement->GetValue(BLOCK_ID);
+}
+
+Vector OversetCondition::ConditionJacobianToOutwardNormalVector(const Matrix & r_jacobian) const//normal vector pointing outward
+{
+	assert(r_jacobian.size1() == 3);
+	assert(r_jacobian.size2() == 2);
+
+	Vector normal_vector(3);
+	normal_vector(0) = - r_jacobian(1,0)*r_jacobian(2,1) + r_jacobian(2,0)*r_jacobian(1,1);
+	normal_vector(1) =   r_jacobian(0,0)*r_jacobian(2,1) - r_jacobian(2,0)*r_jacobian(0,1);
+	normal_vector(2) = - r_jacobian(0,0)*r_jacobian(1,1) + r_jacobian(1,0)*r_jacobian(0,1);
+
+	double norm = norm_2(normal_vector);
+
+	normal_vector /= norm;
+
+	return normal_vector;
 }
 
 }//namespace Kratos 

@@ -72,6 +72,8 @@ public:
 
     const std::size_t MeshBlockId() const;
 
+    Vector ConditionJacobianToOutwardNormalVector(const Matrix & r_jacobian) const;//normal vector pointing outward
+    
 protected:
     //default constructor necessary for serialization  
     OversetCondition(IndexType NewId = 0);

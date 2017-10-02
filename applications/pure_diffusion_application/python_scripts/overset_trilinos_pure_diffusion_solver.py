@@ -35,7 +35,7 @@ class StaticPoissonSolverMPI:
             "linear_solver_settings"       : {
                 "solver_type"                        : "MultiLevelSolver",
                 "max_iteration"                      : 200,
-                "tolerance"                          : 1e-8,
+                "tolerance"                          : 1e-14,
                 "max_levels"                         : 3,
                 "symmetric"                          : false,
                 "reform_preconditioner_at_each_step" : true,
@@ -93,7 +93,7 @@ class StaticPoissonSolverMPI:
 
         #option 2: using newton method
         self.convergence_criterion = KratosTrilinos.TrilinosResidualCriteria(1e-10, 1e-14)
-        MaxNewtonIteration = 30
+        MaxNewtonIteration = 200
         CalculateReactionFlag = False
         ReformDofSetAtEachStep = False
         MoveMeshFlag = False

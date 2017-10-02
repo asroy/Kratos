@@ -31,8 +31,8 @@ public:
         //mEquationsId
         mEquationsId.clear();
         mEquationsId.resize(num_node);
-		for(std::size_t i = 0; i < num_node; i++)
-		    mEquationsId[i] = const_cast<ModelPart::NodeType &> (r_geometry[i]).GetDof(TEMPERATURE).EquationId();			
+        for(std::size_t i = 0; i < num_node; i++)
+		        mEquationsId[i] = const_cast<ModelPart::NodeType &> (r_geometry[i]).GetDof(TEMPERATURE).EquationId();			
 
 
         //shape functions value and derivative
@@ -51,18 +51,13 @@ public:
         
         //field variable
         //TEMPERATURE
-		Vector nodes_temp = ZeroVector(num_node);
-		for(std::size_t i = 0; i < num_node; i++)
+        Vector nodes_temp = ZeroVector(num_node);
+        for(std::size_t i = 0; i < num_node; i++)
             nodes_temp[i] = r_geometry[i].FastGetSolutionStepValue(TEMPERATURE);
 
-        double temp = 0;
-        for(std::size_t i = 0; i < num_node; i++ )
-            temp += Ns[i]*nodes_temp[i];
+        double temp = boost::numeric::ublas::inner_prod( Ns, nodes_temp );
 
-        Vector Dtemp_DXs(3);
-        Dtemp_DXs[0] = DNs_DXs(0,0)*nodes_temp[0] + DNs_DXs(1,0)*nodes_temp[1] + DNs_DXs(2,0)*nodes_temp[2];
-        Dtemp_DXs[1] = DNs_DXs(0,1)*nodes_temp[0] + DNs_DXs(1,1)*nodes_temp[1] + DNs_DXs(2,1)*nodes_temp[2];
-        Dtemp_DXs[2] = DNs_DXs(0,2)*nodes_temp[0] + DNs_DXs(1,2)*nodes_temp[1] + DNs_DXs(2,2)*nodes_temp[2];
+        Vector Dtemp_DXs = prod( trans(DNs_DXs), nodes_temp );
 
         //coordinate (for debugging)
         Vector r_coordinate(3);
@@ -102,11 +97,14 @@ public:
         mCoordinate[1] = r_coordinate[1];
         mCoordinate[2] = r_coordinate[2];
 
-        // {
-        //     std::cout<<__func__<<std::endl;
-        //     DistributedAssignment::DataUtility::DataPrinter printer;
-        //     printer.Print(mEquationsId);
-        // }
+        {
+            DistributedAssignment::DataUtility::DataPrinter printer;
+
+            // std::cout<<__func__<<std::endl;
+            // printf("%lg %lg %lg %lg\n",nodes_temp[0],nodes_temp[1],nodes_temp[2],nodes_temp[3]);
+            // printf("mTempGradient\n");
+            // printer.Print(mTempGradient);
+        }
     }
 
 private:
