@@ -76,8 +76,6 @@ void PoissonOversetCondition3D::CalculateRightHandSide(VectorType& rRightHandSid
 
 	rRightHandSideVector = ZeroVector(size2);
 
-	// return;//debugging
-
 	//
 	Vector parent_element_nodes_temp(r_parent_element.size());
 	for(std::size_t i = 0; i < r_parent_element.size(); i++)
@@ -151,13 +149,13 @@ void PoissonOversetCondition3D::CalculateRightHandSide(VectorType& rRightHandSid
 
 		mu /= 3*num_parent_node;
 
+		mu *= 1000;
+
 		printf("%s %d weight %lg determ %lg normal_vector %lg %lg %lg\n",__func__,24, weight, condition_jacobian_determinant, normal_vector[0], normal_vector[1], normal_vector[2]);
 
 		//calculate rhs
 		for( std::size_t i_parent_element_node = 0; i_parent_element_node < r_parent_element.size(); i_parent_element_node++ )
 		{
-			// printf("%s %d\n",__func__,241);
-
 			MatrixRow DN_DXs_parent_element_i(DNs_DXs_parent_element,i_parent_element_node);
 
 			rRightHandSideVector[i_parent_element_node] += weight * condition_jacobian_determinant *
@@ -196,8 +194,6 @@ void PoissonOversetCondition3D::CalculateLeftHandSide(MatrixType & rLeftHandSide
 		rLeftHandSideMatrix.resize(size2,size2,false);
 
 	rLeftHandSideMatrix = ZeroMatrix(size2,size2);
-
-	// return;//debugging
 
 	//
 	Vector parent_element_nodes_temp(r_parent_element.size());
@@ -266,6 +262,8 @@ void PoissonOversetCondition3D::CalculateLeftHandSide(MatrixType & rLeftHandSide
 			mu += std::abs(DNs_DXs_parent_element(i,0)) + std::abs(DNs_DXs_parent_element(i,1)) + std::abs(DNs_DXs_parent_element(i,2));
 		
 		mu /= 3*num_parent_node;
+
+		mu *= 1000;
 
 		//calculate lhs
 		for( std::size_t i_parent_element_node = 0; i_parent_element_node < num_parent_node; i_parent_element_node++ )
