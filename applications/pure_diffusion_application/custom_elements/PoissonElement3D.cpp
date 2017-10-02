@@ -88,7 +88,7 @@ namespace Kratos
 		noalias(rRightHandSideVector) = -prod(rLeftHandSideMatrix,ms_temp);
 
 		//add source term
-		rRightHandSideVector += ScalarVector(3, 1)*Volume;
+		rRightHandSideVector += ScalarVector(number_of_points, 1)*Volume;
 		
 		KRATOS_CATCH("");
 	}
