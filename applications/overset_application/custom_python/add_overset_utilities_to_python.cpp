@@ -76,9 +76,10 @@ namespace Python
 			.def("GenerateHinges", &OversetAssembly::OversetAssembler::GenerateHinges)
 			.def("SearchHingesDonor", &OversetAssembly::OversetAssembler::SearchHingesDonor)
 			.def("GetOversetConditionsDonorEquationsId", &OversetAssembly::OversetAssembler::GetOversetConditionsDonorEquationsId)
-			.def("InterpolateHingesDonorData", &OversetAssembly::OversetAssembler::InterpolateHingesDonorData);
+			.def("InterpolateHingesDonorData", &OversetAssembly::OversetAssembler::InterpolateHingesDonorData)
+			.def("WiteResultVTK", &OversetAssembly::OversetAssembler::WiteResultVTK);
 	}
-
+	
 }//namespace Python
 }//namespace Kratos
 
