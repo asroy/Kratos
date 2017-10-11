@@ -28,6 +28,7 @@
 
 #include "custom_elements/PoissonElement3D.h"
 #include "custom_conditions/PointSourceCondition3D.h"
+#include "custom_conditions/PoissonHeatFluxCondition3D.h"
 #include "custom_conditions/PoissonOversetCondition3D.h"
 
 
@@ -102,6 +103,7 @@ namespace Kratos
 
  		const PoissonElement3D  mPoissonElement3D;
 		const PointSourceCondition3D  mPointSourceCondition3D;
+		const PoissonHeatFluxCondition3D  mPoissonHeatFluxCondition3D;
 		const PoissonOversetCondition3D  mPoissonOversetCondition3D;
 		
 		/// Assignment operator.

@@ -12,6 +12,7 @@ set( KRATOS_PUREDIFFUSION_APPLICATION_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_custom_utilities_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/PoissonElement3D.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/PointSourceCondition3D.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/PoissonHeatFluxCondition3D.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/PoissonOversetCondition3D.cpp
 )
 
