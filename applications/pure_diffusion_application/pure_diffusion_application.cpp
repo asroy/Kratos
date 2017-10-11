@@ -29,7 +29,7 @@ namespace Kratos
  	KratosPureDiffusionApplication::KratosPureDiffusionApplication(): //constructor  do not forget to add the ":" 
 		mPoissonElement3D          ( 0,   Element::GeometryType::Pointer( new Tetrahedra3D4<Node<3> > (   Element::GeometryType::PointsArrayType (4) ) ) ),
 		mPointSourceCondition3D    ( 0, Condition::GeometryType::Pointer( new Point3D      <Node<3> > ( Condition::GeometryType::PointsArrayType (1) ) ) ),
-		mPoissonHeatFluxCondition3D( 0, Condition::GeometryType::Pointer( new Point3D      <Node<3> > ( Condition::GeometryType::PointsArrayType (1) ) ) ),
+		mPoissonHeatFluxCondition3D( 0, Condition::GeometryType::Pointer( new Triangle3D3  <Node<3> > ( Condition::GeometryType::PointsArrayType (3) ) ) ),
 		mPoissonOversetCondition3D ( 0, Condition::GeometryType::Pointer( new Triangle3D3  <Node<3> > ( Condition::GeometryType::PointsArrayType (3) ) ) )
 	{}
 
