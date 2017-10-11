@@ -53,7 +53,7 @@ namespace Kratos
 		if(rRightHandSideVector.size() != num_node)
 			rRightHandSideVector.resize(num_node,false);
 
-		noalias(rRightHandSideVector) = ZeroVector(1);
+		noalias(rRightHandSideVector) = ZeroVector(num_node);
 
 		assert( num_node == 3 );
 
@@ -63,7 +63,9 @@ namespace Kratos
 
 		GeometryUtils::CalculateGeometryData(GetGeometry(), msDN_DX, msN, area);
 
-		noalias(rRightHandSideVector) += ScalarVector(num_node, 1)*area;  //heat flux is 1
+		noalias(rRightHandSideVector) += ScalarVector(num_node, -1)*area;  //heat flux is -1 (heated)
+
+		rRightHandSideVector = - rRightHandSideVector; //opposite sign please
 
 		KRATOS_CATCH("")
 	}
