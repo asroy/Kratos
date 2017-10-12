@@ -31,7 +31,9 @@ class PoissonHeatFluxCondition3D : public Condition
 public:
     ///@name Type Definitions
     ///@{
-
+    using IntegrationPointType = GeometryData::IntegrationPointType;
+    using IntegrationPointsArrayType = GeometryData::IntegrationPointsArrayType;
+    
     KRATOS_CLASS_POINTER_DEFINITION(PoissonHeatFluxCondition3D);
 
     /// Default constructor. 

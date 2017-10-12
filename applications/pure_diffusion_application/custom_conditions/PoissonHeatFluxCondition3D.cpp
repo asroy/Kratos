@@ -48,22 +48,36 @@ namespace Kratos
 	{
 		KRATOS_TRY
 
-		const unsigned int num_node = GetGeometry().size();
+		const double const_heat_flux = -1; //heat goes in
 
-		if(rRightHandSideVector.size() != num_node)
-			rRightHandSideVector.resize(num_node,false);
+		Condition::GeometryType & r_condition = GetGeometry();
+		
+		const unsigned int num_condition_node = r_condition.size();
 
-		noalias(rRightHandSideVector) = ZeroVector(num_node);
+		if(rRightHandSideVector.size() != num_condition_node)
+			rRightHandSideVector.resize(num_condition_node,false);
 
-		assert( num_node == 3 );
+		noalias(rRightHandSideVector) = ZeroVector(num_condition_node);
 
-		boost::numeric::ublas::bounded_matrix<double,3,2> msDN_DX;
-  		array_1d<double,3> msN;
-		double area;
+		const IntegrationPointsArrayType & r_condition_integration_points = r_condition.IntegrationPoints();
+		
+		//loop over hinges
+		for( const IntegrationPointType & r_condition_integration_point : r_condition_integration_points )
+		{
+			const double weight = r_condition_integration_point.Weight();
 
-		GeometryUtils::CalculateGeometryData(GetGeometry(), msDN_DX, msN, area);
+			//condition
+			//  condition shape functions
+			Vector Ns_condition;
+			r_condition.ShapeFunctionsValues( Ns_condition, r_condition_integration_point );
 
-		noalias(rRightHandSideVector) += ScalarVector(num_node, -1)*area;  //heat flux is -1 (heated)
+			//  condition jacobian
+			const double condition_jacobian_determinant = r_condition.DeterminantOfJacobian(r_condition_integration_point);
+
+			//calculate rhs
+			for( std::size_t i_condition_node = 0; i_condition_node < num_condition_node; i_condition_node++ )
+				rRightHandSideVector[i_condition_node] += Ns_condition[i_condition_node] * weight * condition_jacobian_determinant * const_heat_flux;
+		}
 
 		rRightHandSideVector = - rRightHandSideVector; //opposite sign please
 
@@ -74,12 +88,12 @@ namespace Kratos
 	{
 		KRATOS_TRY
 
-		const unsigned int num_node = GetGeometry().size();
+		const unsigned int num_condition_node = GetGeometry().size();
 
-		if( rLeftHandSideMatrix.size1() != num_node || rLeftHandSideMatrix.size2() != num_node )
-			rLeftHandSideMatrix.resize(num_node,num_node,false);
+		if( rLeftHandSideMatrix.size1() != num_condition_node || rLeftHandSideMatrix.size2() != num_condition_node )
+			rLeftHandSideMatrix.resize(num_condition_node,num_condition_node,false);
 
-		noalias(rLeftHandSideMatrix) = ZeroMatrix(num_node,num_node);
+		noalias(rLeftHandSideMatrix) = ZeroMatrix(num_condition_node,num_condition_node);
 
 		KRATOS_CATCH("")
 	}	
@@ -100,11 +114,11 @@ namespace Kratos
 	//************************************************************************************
 	void PoissonHeatFluxCondition3D::EquationIdVector(EquationIdVectorType& rResult, ProcessInfo& CurrentProcessInfo)
 	{
-		int num_node = GetGeometry().PointsNumber();
+		int num_condition_node = GetGeometry().PointsNumber();
 		unsigned int index;
 		unsigned int dim = 1;
-		rResult.resize(num_node*dim);
-		for (int i=0;i<num_node;i++)
+		rResult.resize(num_condition_node*dim);
+		for (int i=0;i<num_condition_node;i++)
 		{
 			index = i*dim;
 			rResult[index] = (GetGeometry()[i].GetDof(TEMPERATURE).EquationId());			

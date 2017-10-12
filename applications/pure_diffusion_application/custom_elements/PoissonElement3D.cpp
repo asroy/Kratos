@@ -82,14 +82,10 @@ namespace Kratos
 
 
 		//subtracting the dirichlet term
-		// RHS -= LHS*DUMMY_UNKNOWNs
 		for(unsigned int iii = 0; iii<number_of_points; iii++)
 			ms_temp[iii] = GetGeometry()[iii].FastGetSolutionStepValue(TEMPERATURE);
 		noalias(rRightHandSideVector) = -prod(rLeftHandSideMatrix,ms_temp);
 
-		//add source term
-		// rRightHandSideVector += ScalarVector(number_of_points, 1)*Volume;
-		
 		KRATOS_CATCH("");
 	}
 
