@@ -53,6 +53,9 @@ class StaticPoissonSolverMPI:
         #overset assembler
         self.overset_assembler = KratosOverset.OversetAssembler(self.model_part)
 
+        #result writer
+        self.result_writer = KratosOverset.ResultWriter(self.model_part)
+
         #definition of the linear solver
         import trilinos_linear_solver_factory
         self.trilinos_linear_solver = trilinos_linear_solver_factory.ConstructSolver(self.settings["linear_solver_settings"])  #we set the type of solver that we want 

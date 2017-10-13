@@ -61,6 +61,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "linear_solvers/linear_solver.h"
 
 #include "custom_utilities/OversetAssembler.h"
+#include "custom_utilities/ResultWriter.h"
 #include "custom_python/add_overset_utilities_to_python.h"
 
 
@@ -76,10 +77,13 @@ namespace Python
 			.def("GenerateHinges", &OversetAssembly::OversetAssembler::GenerateHinges)
 			.def("SearchHingesDonor", &OversetAssembly::OversetAssembler::SearchHingesDonor)
 			.def("GetOversetConditionsDonorEquationsId", &OversetAssembly::OversetAssembler::GetOversetConditionsDonorEquationsId)
-			.def("InterpolateHingesDonorData", &OversetAssembly::OversetAssembler::InterpolateHingesDonorData)
-			.def("WiteResultVTK", &OversetAssembly::OversetAssembler::WiteResultVTK);
+			.def("InterpolateHingesDonorData", &OversetAssembly::OversetAssembler::InterpolateHingesDonorData);
+
+
+		class_<OversetAssembly::ResultWriter, boost::noncopyable> ("ResultWriter", init<const ModelPart &>())
+			.def("WriteVTK", &OversetAssembly::ResultWriter::WriteVTK);
 	}
-	
+
 }//namespace Python
 }//namespace Kratos
 
