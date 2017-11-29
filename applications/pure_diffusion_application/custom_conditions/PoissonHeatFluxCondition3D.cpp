@@ -114,7 +114,7 @@ namespace Kratos
 	//************************************************************************************
 	void PoissonHeatFluxCondition3D::EquationIdVector(EquationIdVectorType& rResult, ProcessInfo& CurrentProcessInfo)
 	{
-		int num_condition_node = GetGeometry().PointsNumber();
+		int num_condition_node = GetGeometry().size();
 		unsigned int index;
 		unsigned int dim = 1;
 		rResult.resize(num_condition_node*dim);
