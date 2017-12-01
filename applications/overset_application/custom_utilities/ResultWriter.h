@@ -42,7 +42,7 @@ public:
     ~ResultWriter()
     {}
 
-    void WriteVTK(const std::string file_name) const
+    void WriteVTK(const std::string file_name, Variable<double> variable ) const
     {
         using GlobalToLocalNode = std::map<std::size_t,std::size_t>;
 
@@ -82,7 +82,7 @@ public:
 
             for( ModelPart::NodesContainerType::ptr_const_iterator it_p_node = r_nodes_pointer.ptr_begin(); it_p_node != r_nodes_pointer.ptr_end(); it_p_node = std::next(it_p_node) )
                 fprintf(fp, "%lf %lf %lf\n", (* it_p_node)->X(), (* it_p_node)->Y(), (* it_p_node)->Z() );
-            
+
             //write elements connectivity
             fprintf(fp, "CELLS %lu %lu\n",mrModelPart.NumberOfElements(), 5*mrModelPart.NumberOfElements() );
 
@@ -97,7 +97,7 @@ public:
 
                 fprintf(fp, "\n");
             }
-            
+
             //write element type
             fprintf(fp, "CELL_TYPES %lu\n", mrModelPart.NumberOfElements() );
 
@@ -108,9 +108,9 @@ public:
             fprintf(fp, "POINT_DATA %lu\n", mrModelPart.NumberOfNodes());
             fprintf(fp, "SCALARS scalars float 1\n");
             fprintf(fp, "LOOKUP_TABLE default\n");
-            
+
             for( ModelPart::NodesContainerType::ptr_const_iterator it_p_node = r_nodes_pointer.ptr_begin(); it_p_node != r_nodes_pointer.ptr_end(); it_p_node = std::next(it_p_node) )
-                fprintf(fp, "%lf\n", (* it_p_node)->GetSolutionStepValue(TEMPERATURE) );
+                fprintf(fp, "%lf\n", (* it_p_node)->GetSolutionStepValue(variable) );
 
             fclose(fp);
         }
