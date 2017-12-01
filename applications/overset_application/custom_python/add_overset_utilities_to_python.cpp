@@ -81,7 +81,8 @@ namespace Python
 
 
 		class_<OversetAssembly::ResultWriter, boost::noncopyable> ("ResultWriter", init<const ModelPart &>())
-			.def("WriteVTK", &OversetAssembly::ResultWriter::WriteVTK);
+			.def("WriteVtkScalar", &OversetAssembly::ResultWriter::WriteVtkScalar)
+			.def("WriteVtkVector3", &OversetAssembly::ResultWriter::WriteVtkVector3);
 	}
 
 }//namespace Python
