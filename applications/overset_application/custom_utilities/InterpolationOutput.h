@@ -23,7 +23,7 @@ public:
     virtual ~InterpolationOutput()
     {}
 
-    virtual void InterpolateDataFromElement( const Point<3> & r_point, const ModelPart::ElementType & r_element )
+    virtual void InterpolateDataFromElement( const Point & r_point, const ModelPart::ElementType & r_element )
     {
         const ModelPart::ElementType::GeometryType & r_geometry = r_element.GetGeometry();
         const std::size_t num_node = r_geometry.size();

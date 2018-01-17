@@ -105,7 +105,7 @@ void PoissonOversetCondition3D::CalculateRightHandSide(VectorType& rRightHandSid
 
 		//parent element
 		//  parent element point
-		Point<3> parent_element_point;
+		Point parent_element_point;
 		r_parent_element.PointLocalCoordinates( parent_element_point, HingeGlobalCoordinate(i_hinge) );
 
 		//  parent element shape functions
@@ -224,7 +224,7 @@ void PoissonOversetCondition3D::CalculateLeftHandSide(MatrixType & rLeftHandSide
 
 		//parent element
 		//  parent element point
-		Point<3> parent_element_point;
+		Point parent_element_point;
 		r_parent_element.PointLocalCoordinates( parent_element_point, HingeGlobalCoordinate(i_hinge) );
 
 		//  parent element shape functions

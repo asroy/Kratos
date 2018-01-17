@@ -13,7 +13,7 @@ struct HingeDonorInfo
     std::size_t mModelPartId;
     ModelPart::ElementType::IndexType mElementId;
     std::vector<ModelPart::NodeType::IndexType> mNodesId;//mNodesId is for debugging
-    Point<3> mBarycentricCoordinate;
+    Point mBarycentricCoordinate;
 };
 
 }//namespace OversetAssembly

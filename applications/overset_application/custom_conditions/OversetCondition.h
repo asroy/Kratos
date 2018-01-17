@@ -32,7 +32,7 @@ namespace Kratos
 class OversetCondition : public Condition
 {
 public:
-    using PointType = Point<3>;
+    using PointType = Point;
     using IntegrationPointType = GeometryData::IntegrationPointType;
     using IntegrationPointsArrayType = GeometryData::IntegrationPointsArrayType;
 

@@ -23,7 +23,7 @@ public:
     using Location = DistributedAssignment::Communication::MpiLocation;
     using InterpolatorKey = DistributedAssignment::DistributedAssignment::DistributedKey<Location>;
 
-    using PointType = Point<3>;
+    using PointType = Point;
 
 public:
     Interpolator() = delete;

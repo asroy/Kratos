@@ -26,11 +26,12 @@ namespace Kratos
 {
 	KRATOS_CREATE_VARIABLE(double, POINT_HEAT_SOURCE) // the other variables  needed in this app dont need to be created since they're already included in the kernel  ( CONDUCTIVITY and TEMPERATURE)
 
- 	KratosPureDiffusionApplication::KratosPureDiffusionApplication(): //constructor  do not forget to add the ":" 
-		mPoissonElement3D          ( 0,   Element::GeometryType::Pointer( new Tetrahedra3D4<Node<3> > (   Element::GeometryType::PointsArrayType (4) ) ) ),
-		mPointSourceCondition3D    ( 0, Condition::GeometryType::Pointer( new Point3D      <Node<3> > ( Condition::GeometryType::PointsArrayType (1) ) ) ),
-		mPoissonHeatFluxCondition3D( 0, Condition::GeometryType::Pointer( new Triangle3D3  <Node<3> > ( Condition::GeometryType::PointsArrayType (3) ) ) ),
-		mPoissonOversetCondition3D ( 0, Condition::GeometryType::Pointer( new Triangle3D3  <Node<3> > ( Condition::GeometryType::PointsArrayType (3) ) ) )
+ 	KratosPureDiffusionApplication::KratosPureDiffusionApplication() //constructor  do not forget to add the ":" 
+		: 	KratosApplication("KratosPureDiffusionApplication"),
+			mPoissonElement3D          ( 0,   Element::GeometryType::Pointer( new Tetrahedra3D4<Node<3> > (   Element::GeometryType::PointsArrayType (4) ) ) ),
+			mPointSourceCondition3D    ( 0, Condition::GeometryType::Pointer( new Point3D      <Node<3> > ( Condition::GeometryType::PointsArrayType (1) ) ) ),
+			mPoissonHeatFluxCondition3D( 0, Condition::GeometryType::Pointer( new Triangle3D3  <Node<3> > ( Condition::GeometryType::PointsArrayType (3) ) ) ),
+			mPoissonOversetCondition3D ( 0, Condition::GeometryType::Pointer( new Triangle3D3  <Node<3> > ( Condition::GeometryType::PointsArrayType (3) ) ) )
 	{}
 
 	void KratosPureDiffusionApplication::Register()

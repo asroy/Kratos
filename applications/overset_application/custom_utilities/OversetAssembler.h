@@ -37,7 +37,7 @@ private:
     using InterpolatorKey = InterpolationMethod::Key;
     using InterpolationAssignmentKey = InterpolationMethod::Key;
 
-    using PointType = Point<3>;
+    using PointType = Point;
 
 public:
     OversetAssembler() = delete;
