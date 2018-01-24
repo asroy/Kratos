@@ -1209,7 +1209,7 @@ protected:
                 // Calculate the part of the contributions that is constant for each node combination
 
                 // Velocity block
-                K = Density * rShapeFunc[i] * AGradN[j]; // Convective term: v * ( a * Grad(u) )
+                K = Density * rShapeFunc[j] * AGradN[i]; // Convective term: v * ( a * Grad(u) )
                 //K = 0.5 * Density * (rShapeFunc[i] * AGradN[j] - AGradN[i] * rShapeFunc[j]); // Skew-symmetric convective term 1/2( v*grad(u)*u - grad(v) uu )
                 K += TauOne * Density * AGradN[i] * Density * AGradN[j]; // Stabilization: (a * Grad(v)) * TauOne * (a * Grad(u))
                 K *= Weight;
