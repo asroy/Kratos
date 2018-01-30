@@ -74,15 +74,17 @@ namespace Python
 		using namespace boost::python;
 		
 		class_<OversetAssembly::OversetAssembler, boost::noncopyable> ("OversetAssembler", init<const ModelPart &>())
-			.def("GenerateHinges", &OversetAssembly::OversetAssembler::GenerateHinges)
-			.def("SearchHingesDonor", &OversetAssembly::OversetAssembler::SearchHingesDonor)
-			.def("GetOversetConditionsDonorEquationsId", &OversetAssembly::OversetAssembler::GetOversetConditionsDonorEquationsId)
-			.def("InterpolateHingesDonorData", &OversetAssembly::OversetAssembler::InterpolateHingesDonorData);
-
+			.def("GenerateHinges",                         & OversetAssembly::OversetAssembler::GenerateHinges)
+			.def("SearchHingesDonor",                      & OversetAssembly::OversetAssembler::SearchHingesDonor)
+			.def("GetOversetConditionsDonorEquationsId",   & OversetAssembly::OversetAssembler::GetOversetConditionsDonorEquationsId)
+			.def("InterpolateHingesDonorData",             & OversetAssembly::OversetAssembler::InterpolateHingesDonorData)
+			.def("AddInterpolatedVariableNeedEquationId",  & OversetAssembly::OversetAssembler::AddInterpolatedVariableNeedEquationId)
+			.def("AddInterpolatedVariableNeedValue",       & OversetAssembly::OversetAssembler::AddInterpolatedVariableNeedValue)
+			.def("AddInterpolatedVariableNeedDX",          & OversetAssembly::OversetAssembler::AddInterpolatedVariableNeedDX);
 
 		class_<OversetAssembly::ResultWriter, boost::noncopyable> ("ResultWriter", init<const ModelPart &>())
-			.def("WriteVtkScalar", &OversetAssembly::ResultWriter::WriteVtkScalar)
-			.def("WriteVtkVector3", &OversetAssembly::ResultWriter::WriteVtkVector3);
+			.def("WriteVtkScalar",  & OversetAssembly::ResultWriter::WriteVtkScalar)
+			.def("WriteVtkVector3", & OversetAssembly::ResultWriter::WriteVtkVector3);
 	}
 
 }//namespace Python

@@ -33,11 +33,30 @@ public:
     DATAPROFILE_PROFILE_BASIC_TYPE(float)
     DATAPROFILE_PROFILE_BASIC_TYPE(double)
 
+    //profile std::string
+    void Profile( const std::string & r_string )
+    {
+        if( r_string.size() == 0 )
+            this->SetIsTrivial(true);
+        else
+            this->SetIsTrivial(false);
+    }
+
     //profile std::vector
     template<typename TDataType>
     void Profile ( const std::vector<TDataType> & r_vector )
     {
         if( r_vector.size() == 0 )
+            this->SetIsTrivial(true);
+        else
+            this->SetIsTrivial(false);
+    }
+
+    //profile std::map
+    template<typename TKeyType, typename TDataType>
+    void Profile ( const std::map<TKeyType, TDataType> & r_map )
+    {
+        if( r_map.size() == 0 )
             this->SetIsTrivial(true);
         else
             this->SetIsTrivial(false);

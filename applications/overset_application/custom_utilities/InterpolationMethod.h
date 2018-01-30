@@ -37,6 +37,9 @@ public:
     using InterpolationAssignmentInputData  = typename InterpolationAssignmentManager::template AssignmentDataType<InterpolationInput>;
     using InterpolationAssignmentOutputData = typename InterpolationAssignmentManager::template AssignmentDataType<InterpolationOutput>;
 
+    using DoubleVariable = Variable<double>;
+    using Array1dComponentVariable = VariableComponent<VectorComponentAdaptor<array_1d<double,3>>>;
+
 public:
     InterpolationMethod() = delete;
 
@@ -65,6 +68,24 @@ public:
 
         //assignment mananger
         delete mpInterpolationAssignmentManager;
+    }
+
+    void AddVariableNeedEquationId( const DoubleVariable & r_variable )
+    {
+        for( const auto & r_local_interpolator_pointer_paired_by_key : mpInterpolatorManager->LocalContractorsPointer() )
+            r_local_interpolator_pointer_paired_by_key.second -> AddVariableNeedEquationId(r_variable);
+    }
+
+    void AddVariableNeedValue( const DoubleVariable & r_variable )
+    {
+        for( const auto & r_local_interpolator_pointer_paired_by_key : mpInterpolatorManager->LocalContractorsPointer() )
+            r_local_interpolator_pointer_paired_by_key.second -> AddVariableNeedValue(r_variable);
+    }
+
+    void AddVariableNeedDX( const DoubleVariable & r_variable )
+    {   
+        for( const auto & r_local_interpolator_pointer_paired_by_key : mpInterpolatorManager->LocalContractorsPointer() )
+            r_local_interpolator_pointer_paired_by_key.second -> AddVariableNeedDX(r_variable);
     }
 
     void ClearAllInterpolationAssignments()

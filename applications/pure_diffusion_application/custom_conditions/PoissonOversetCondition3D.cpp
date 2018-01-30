@@ -133,12 +133,13 @@ void PoissonOversetCondition3D::CalculateRightHandSide(VectorType& rRightHandSid
 		
 		//donor element
 		//  donor element temperature and global gradient
-		double temp_donor_element = r_hinge_donor_data.mTemperature;
+		double temp_donor_element = r_hinge_donor_data.GetValue(TEMPERATURE);
+		std::vector<double> dtemp_dxs = r_hinge_donor_data.GetDVDXs(TEMPERATURE);
 
 		Vector Dtemp_DXs_donor_element(3);
-		Dtemp_DXs_donor_element[0] = r_hinge_donor_data.mTempGradient[0];
-		Dtemp_DXs_donor_element[1] = r_hinge_donor_data.mTempGradient[1];
-		Dtemp_DXs_donor_element[2] = r_hinge_donor_data.mTempGradient[2];
+		Dtemp_DXs_donor_element[0] = dtemp_dxs[0];
+		Dtemp_DXs_donor_element[1] = dtemp_dxs[1];
+		Dtemp_DXs_donor_element[2] = dtemp_dxs[2];
 
 		printf("%s %d temp_donor_element %lg Dtemp_DXs_donor_element %lg %lg %lg\n",__func__,23, temp_donor_element, Dtemp_DXs_donor_element[0], Dtemp_DXs_donor_element[1], Dtemp_DXs_donor_element[2]);
 
@@ -241,7 +242,7 @@ void PoissonOversetCondition3D::CalculateLeftHandSide(MatrixType & rLeftHandSide
 		Matrix DNs_DXs_parent_element = prod(DNs_DEs_parent_element, jinv_parent_element);
 
 		//donor element
-		std::size_t num_donor_node = r_hinge_donor_data.mNs.size();
+		std::size_t num_donor_node = r_hinge_donor_data.NumberOfDonorNodes();
 
 		//  donor element shape function value adn global gradient
 		Vector Ns_donor_element(num_donor_node);
@@ -329,7 +330,7 @@ void PoissonOversetCondition3D::DonorEquationIdVector(EquationIdVectorType& rRes
 
     for(std::size_t i_hinge = 0; i_hinge < NumberOfHinges(); i_hinge++ )
     {
-        num_dof += rHingeDonorData(i_hinge).mEquationsId.size();
+        num_dof += rHingeDonorData(i_hinge).NumberOfDonorNodes();
     }
 
 	rResult.clear();
@@ -340,17 +341,16 @@ void PoissonOversetCondition3D::DonorEquationIdVector(EquationIdVectorType& rRes
     {
         const OversetAssembly::HingeDonorData & r_hinge_donor_data = rHingeDonorData(i_hinge);
 
-		if( ! r_hinge_donor_data.mInitialized )
+		if( ! r_hinge_donor_data.IsInitialized() )
 		{
 			std::cout<<__func__<<"wrong! hinge donor data not Initialized"<<std::endl;
 			exit(EXIT_FAILURE);
 		}
 
-        for( std::size_t j = 0; j < r_hinge_donor_data.mEquationsId.size(); j++ )
+        for( std::size_t j = 0; j < r_hinge_donor_data.NumberOfDonorNodes(); j++ )
         {
-            rResult[i] = r_hinge_donor_data.mEquationsId[j];
+            rResult[i] = r_hinge_donor_data.GetDonorNodeEquationId(TEMPERATURE, j);
 			i++;
-
 		}
 	}
 

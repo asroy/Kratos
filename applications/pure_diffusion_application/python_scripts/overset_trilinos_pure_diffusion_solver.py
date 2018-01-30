@@ -53,6 +53,11 @@ class StaticPoissonSolverMPI:
         #overset assembler
         self.overset_assembler = KratosOverset.OversetAssembler(self.model_part)
 
+        ## add variables whose value/derivatives/equation-id are needed on the hinge side
+        self.overset_assembler.AddInterpolatedVariableNeedEquationId(KratosMultiphysics.TEMPERATURE)
+        self.overset_assembler.AddInterpolatedVariableNeedValue(KratosMultiphysics.TEMPERATURE)
+        self.overset_assembler.AddInterpolatedVariableNeedDX(KratosMultiphysics.TEMPERATURE)
+
         #result writer
         self.result_writer = KratosOverset.ResultWriter(self.model_part)
 
