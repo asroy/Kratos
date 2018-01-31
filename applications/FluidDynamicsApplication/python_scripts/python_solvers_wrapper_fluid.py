@@ -37,6 +37,9 @@ def CreateSolver(main_model_part, custom_settings):
 
         elif ((solver_type == "Embedded") or (solver_type == "EmbeddedAusas")):
             solver_module_name = "trilinos_navier_stokes_embedded_solver"
+    
+        elif (solver_type == "OversetMonolithic"):
+            solver_module_name = "overset_trilinos_navier_stokes_solver_vmsmonolithic"
 
         else:
             raise Exception("the requested solver type is not in the python solvers wrapper")
