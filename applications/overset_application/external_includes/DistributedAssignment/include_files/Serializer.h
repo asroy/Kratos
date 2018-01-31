@@ -1,5 +1,6 @@
 #pragma once
 #include<vector>
+#include<map>
 #include<cstring>
 #include<iostream>
 #include"TypeId.h"
@@ -13,7 +14,7 @@ void Save( const TDataType & r_data )                             \
 {                                                                 \
     std::size_t size = sizeof(r_data);                            \
     if( mBufferSavePos + size > mBufferSize )                     \
-        IncreaseBufferSize(1.25*(mBufferSavePos+ size));          \
+        IncreaseBufferSize(1.25*(mBufferSavePos + size));         \
                                                                   \
     TDataType* p = (TDataType*) (mpBuffer + mBufferSavePos);      \
     *p = r_data;                                                  \
@@ -197,6 +198,47 @@ public:
 
         for( TDataType & r_data : r_vector )//data is reference
            Load(r_data);
+    }
+
+    //save std::map
+    template<typename TKeyType, typename TDataType>
+    void Save( const std::map<TKeyType, TDataType> & r_map )
+    {
+        typedef typename std::map<TKeyType,TDataType>::size_type SizeType;
+
+        SizeType map_size = r_map.size();
+
+        Save(map_size);
+
+        for( auto it = r_map.begin(); it != r_map.end(); it = std::next(it) )
+        {
+           Save(it->first);
+           Save(it->second);
+        }
+    }
+
+    //load std::map
+    template<typename TKeyType, typename TDataType>
+    void Load( std::map<TKeyType, TDataType> & r_map )
+    {
+        typedef typename std::map<TKeyType,TDataType>::size_type SizeType;
+
+        r_map.clear();
+
+        SizeType map_size;
+
+        Load(map_size);
+
+        for( std::size_t i = 0; i < map_size; i++ )
+        {
+            TKeyType key;
+            TDataType data;
+
+            Load(key);
+            Load(data);
+
+            r_map[key] = data;
+        }
     }
 
     //save user data type

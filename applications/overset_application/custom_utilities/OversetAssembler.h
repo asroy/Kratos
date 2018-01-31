@@ -39,6 +39,9 @@ private:
 
     using PointType = Point;
 
+    using DoubleVariable = Variable<double>;
+    using Array1dComponentVariable = VariableComponent<VectorComponentAdaptor<array_1d<double,3>>>;
+
 public:
     OversetAssembler() = delete;
 
@@ -537,13 +540,17 @@ public:
 
                     HingeDonorData & r_hinge_donor_data = p_overset_condition->rHingeDonorData(i_hinge);
 
-                    r_hinge_donor_data.mInitialized  = true;
-                    r_hinge_donor_data.mEquationsId  = r_interpolation_output.mEquationsId;
-                    r_hinge_donor_data.mNs           = r_interpolation_output.mNs;
-                    r_hinge_donor_data.mDNsDXs       = r_interpolation_output.mDNsDXs;
-                    r_hinge_donor_data.mTemperature  = r_interpolation_output.mTemperature;
-                    r_hinge_donor_data.mTempGradient = r_interpolation_output.mTempGradient;
-                    r_hinge_donor_data.mCoordinate   = r_interpolation_output.mCoordinate;
+                    r_hinge_donor_data.mInitialized                               = true;
+                    r_hinge_donor_data.mNumberOfDonorNodes                        = r_interpolation_output.mNumberOfDonorNodes;
+                    r_hinge_donor_data.mNs                                        = r_interpolation_output.mNs;
+                    r_hinge_donor_data.mDNsDXs                                    = r_interpolation_output.mDNsDXs;
+                    r_hinge_donor_data.mDoubleVariablesNodesEquationId            = r_interpolation_output.mDoubleVariablesNodesEquationId;
+                    r_hinge_donor_data.mDoubleVariables                           = r_interpolation_output.mDoubleVariables;
+                    r_hinge_donor_data.mDoubleVariablesDXs                        = r_interpolation_output.mDoubleVariablesDXs;
+                    r_hinge_donor_data.mArray1dComponentVariablesNodesEquationId  = r_interpolation_output.mArray1dComponentVariablesNodesEquationId;
+                    r_hinge_donor_data.mArray1dComponentVariables                 = r_interpolation_output.mArray1dComponentVariables;
+                    r_hinge_donor_data.mArray1dComponentVariablesDXs              = r_interpolation_output.mArray1dComponentVariablesDXs;
+                    r_hinge_donor_data.mCoordinate                                = r_interpolation_output.mCoordinate;
 
                     // printf("donor (%lg, %lg, %lg), temp %lg, # equation %lu,", 
                     //     r_hinge_donor_data.mCoordinate[0],
@@ -563,6 +570,21 @@ public:
 
     const ModelPart & rModelPart() const
     { return mrModelPart; }
+
+    void AddInterpolatedVariableNeedEquationId( const DoubleVariable & r_variable )
+    {
+        mpInterpolationMethod->AddVariableNeedEquationId(r_variable);
+    }
+
+    void AddInterpolatedVariableNeedValue( const DoubleVariable & r_variable )
+    {
+        mpInterpolationMethod->AddVariableNeedValue(r_variable);
+    }
+
+    void AddInterpolatedVariableNeedDX( const DoubleVariable & r_variable )
+    {
+        mpInterpolationMethod->AddVariableNeedDX(r_variable);
+    }
 
 private:
     const ModelPart & mrModelPart;

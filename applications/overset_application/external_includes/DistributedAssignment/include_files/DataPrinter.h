@@ -1,4 +1,5 @@
 #pragma once
+#include<iostream>
 #include<vector>
 
 namespace DataUtility
@@ -30,6 +31,12 @@ class DataPrinter
     DATAPRINTER_PRINT_BASIC_TYPE(float)
     DATAPRINTER_PRINT_BASIC_TYPE(double)
 
+    //print std::string
+    void Print ( const std::string & r_vector ) const
+    {
+        std::cout << r_vector;
+    }
+
     //print std::vector
     template<typename TDataType>
     void Print ( const std::vector<TDataType> & r_vector ) const
@@ -39,6 +46,22 @@ class DataPrinter
       for( const TDataType & r_data : r_vector )
       {
         Print(r_data);
+        std::cout<<std::endl;
+      }
+
+      std::cout<<"}, "<<std::endl;
+    }
+
+    //print std::map
+    template<typename TKeyType, typename TDataType>
+    void Print ( const std::map<TKeyType,TDataType> & r_map ) const
+    {
+      std::cout<<"{std::map, size "<<r_map.size()<<", elements: "<<std::endl;
+
+      for( auto it = r_map.begin(); it != r_map.end(); it = std::next(it) )
+      {
+        Print(it->first);
+        Print(it->second);
         std::cout<<std::endl;
       }
 
