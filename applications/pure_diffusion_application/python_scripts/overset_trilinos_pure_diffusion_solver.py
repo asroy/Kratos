@@ -13,7 +13,7 @@ def AddDofs(model_part):
 
     print ("variables for the Poisson solver added correctly")
 
-class StaticPoissonSolverMPI:
+class StaticPoissonSolverMPIOverset:
     #######################################################################
     def __init__(self,model_part,custom_settings):  #constructor of the class 
         self.model_part = model_part

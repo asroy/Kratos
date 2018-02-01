@@ -72,15 +72,33 @@ namespace Python
 	void  AddOversetUtilitiesToPython()
 	{
 		using namespace boost::python;
-		
+
+		using DoubleVariable = Variable<double>;
+		using Array1dComponentVariable = VariableComponent<VectorComponentAdaptor<array_1d<double,3>>>;
+
+		void (OversetAssembly::OversetAssembler::* pAddInterpolatedVariableNeedEquationId_DoubleVariable) (const DoubleVariable &) = & OversetAssembly::OversetAssembler::AddInterpolatedVariableNeedEquationId;
+
+		void (OversetAssembly::OversetAssembler::* pAddInterpolatedVariableNeedValue_DoubleVariable) (const DoubleVariable &) = & OversetAssembly::OversetAssembler::AddInterpolatedVariableNeedValue;
+
+		void (OversetAssembly::OversetAssembler::* pAddInterpolatedVariableNeedDX_DoubleVariable) (const DoubleVariable &) = & OversetAssembly::OversetAssembler::AddInterpolatedVariableNeedDX;
+
+		void (OversetAssembly::OversetAssembler::* pAddInterpolatedVariableNeedEquationId_Array1dComponentVariable) (const Array1dComponentVariable &) = & OversetAssembly::OversetAssembler::AddInterpolatedVariableNeedEquationId;
+
+		void (OversetAssembly::OversetAssembler::* pAddInterpolatedVariableNeedValue_Array1dComponentVariable) (const Array1dComponentVariable &) = & OversetAssembly::OversetAssembler::AddInterpolatedVariableNeedValue;
+
+		void (OversetAssembly::OversetAssembler::* pAddInterpolatedVariableNeedDX_Array1dComponentVariable) (const Array1dComponentVariable &) = & OversetAssembly::OversetAssembler::AddInterpolatedVariableNeedDX;
+
 		class_<OversetAssembly::OversetAssembler, boost::noncopyable> ("OversetAssembler", init<const ModelPart &>())
 			.def("GenerateHinges",                         & OversetAssembly::OversetAssembler::GenerateHinges)
 			.def("SearchHingesDonor",                      & OversetAssembly::OversetAssembler::SearchHingesDonor)
 			.def("GetOversetConditionsDonorEquationsId",   & OversetAssembly::OversetAssembler::GetOversetConditionsDonorEquationsId)
 			.def("InterpolateHingesDonorData",             & OversetAssembly::OversetAssembler::InterpolateHingesDonorData)
-			.def("AddInterpolatedVariableNeedEquationId",  & OversetAssembly::OversetAssembler::AddInterpolatedVariableNeedEquationId)
-			.def("AddInterpolatedVariableNeedValue",       & OversetAssembly::OversetAssembler::AddInterpolatedVariableNeedValue)
-			.def("AddInterpolatedVariableNeedDX",          & OversetAssembly::OversetAssembler::AddInterpolatedVariableNeedDX);
+			.def("AddInterpolatedVariableNeedEquationId",    pAddInterpolatedVariableNeedEquationId_DoubleVariable)
+			.def("AddInterpolatedVariableNeedValue",         pAddInterpolatedVariableNeedValue_DoubleVariable)
+			.def("AddInterpolatedVariableNeedDX",            pAddInterpolatedVariableNeedDX_DoubleVariable)
+			.def("AddInterpolatedVariableNeedEquationId",    pAddInterpolatedVariableNeedEquationId_Array1dComponentVariable)
+			.def("AddInterpolatedVariableNeedValue",         pAddInterpolatedVariableNeedValue_Array1dComponentVariable)
+			.def("AddInterpolatedVariableNeedDX",            pAddInterpolatedVariableNeedDX_Array1dComponentVariable);
 
 		class_<OversetAssembly::ResultWriter, boost::noncopyable> ("ResultWriter", init<const ModelPart &>())
 			.def("WriteVtkScalar",  & OversetAssembly::ResultWriter::WriteVtkScalar)
