@@ -88,6 +88,24 @@ public:
             r_local_interpolator_pointer_paired_by_key.second -> AddVariableNeedDX(r_variable);
     }
 
+    void AddVariableNeedEquationId( const Array1dComponentVariable & r_variable )
+    {
+        for( const auto & r_local_interpolator_pointer_paired_by_key : mpInterpolatorManager->LocalContractorsPointer() )
+            r_local_interpolator_pointer_paired_by_key.second -> AddVariableNeedEquationId(r_variable);
+    }
+
+    void AddVariableNeedValue( const Array1dComponentVariable & r_variable )
+    {
+        for( const auto & r_local_interpolator_pointer_paired_by_key : mpInterpolatorManager->LocalContractorsPointer() )
+            r_local_interpolator_pointer_paired_by_key.second -> AddVariableNeedValue(r_variable);
+    }
+
+    void AddVariableNeedDX( const Array1dComponentVariable & r_variable )
+    {   
+        for( const auto & r_local_interpolator_pointer_paired_by_key : mpInterpolatorManager->LocalContractorsPointer() )
+            r_local_interpolator_pointer_paired_by_key.second -> AddVariableNeedDX(r_variable);
+    }
+
     void ClearAllInterpolationAssignments()
     {
         mpInterpolationAssignmentManager->ClearAllAssignments();

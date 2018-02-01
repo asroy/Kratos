@@ -66,6 +66,21 @@ public:
         mDoubleVariablesNeedDX.insert(r_variable);
     }
 
+    void AddVariableNeedEquationId( const Array1dComponentVariable & r_variable )
+    {
+        mArray1dComponentVariablesNeedEquationId.insert(r_variable);
+    }
+
+    void AddVariableNeedValue( const Array1dComponentVariable & r_variable )
+    {
+        mArray1dComponentVariablesNeedValue.insert(r_variable);
+    }
+
+    void AddVariableNeedDX( const Array1dComponentVariable & r_variable )
+    {   
+        mArray1dComponentVariablesNeedDX.insert(r_variable);
+    }
+
     void Execute( const InterpolationInput & r_input, InterpolationOutput & r_output )
     {
         const ModelPart::ElementType::IndexType element_id = r_input.mElementId;
@@ -190,6 +205,59 @@ public:
             r_gradient[2] = Dvalue_DXs[2];
         }
 
+
+        // array1d variable component equation nodes id 
+        for( auto it = mArray1dComponentVariablesNeedEquationId.begin(); it != mArray1dComponentVariablesNeedEquationId.end(); it = std::next(it) )
+        {
+            const Array1dComponentVariable & r_variable = * it;
+            const VariableKeyType variable_key = r_variable.Key();
+
+            std::vector<std::size_t> & r_nodes_equation_id = r_output.mArray1dComponentVariablesNodesEquationId[variable_key];
+
+            r_nodes_equation_id.clear();
+            r_nodes_equation_id.resize(num_node);
+
+            for(std::size_t i = 0; i < num_node; i++)
+            {
+                r_nodes_equation_id[i] = const_cast<ModelPart::NodeType &> (r_geometry[i]).GetDof(r_variable).EquationId();
+            }
+        }
+
+        // array1d variable component value at quadrature point
+        for( auto it = mArray1dComponentVariablesNeedValue.begin(); it != mArray1dComponentVariablesNeedValue.end(); it = std::next(it) )
+        {
+            const Array1dComponentVariable & r_variable =  * it;
+            const VariableKeyType variable_key = r_variable.Key();
+
+            Vector nodes_value = ZeroVector(num_node);
+            for(std::size_t i = 0; i < num_node; i++)
+                nodes_value[i] = r_geometry[i].FastGetSolutionStepValue(r_variable);
+
+            r_output.mArray1dComponentVariables[variable_key] = boost::numeric::ublas::inner_prod( Ns, nodes_value );
+        }
+
+        // array1d variable component 1st derivatives
+        for( auto it = mArray1dComponentVariablesNeedDX.begin(); it != mArray1dComponentVariablesNeedDX.end(); it = std::next(it) )
+        {
+            const Array1dComponentVariable & r_variable = * it;
+            const VariableKeyType variable_key = r_variable.Key();
+
+            // value at quadrature point
+            Vector nodes_value = ZeroVector(num_node);
+            for(std::size_t i = 0; i < num_node; i++)
+                nodes_value[i] = r_geometry[i].FastGetSolutionStepValue(r_variable);
+
+            Vector Dvalue_DXs = prod( trans(DNs_DXs), nodes_value );
+
+            std::vector<double> & r_gradient = r_output.mArray1dComponentVariablesDXs[variable_key];
+
+            r_gradient.clear();
+            r_gradient.resize(3);
+            r_gradient[0] = Dvalue_DXs[0];
+            r_gradient[1] = Dvalue_DXs[1];
+            r_gradient[2] = Dvalue_DXs[2];
+        }
+
         //coordinate (for debugging)
         Vector r_coordinate(3);
         noalias(r_coordinate) = ZeroVector(3);
@@ -224,9 +292,9 @@ private:
     std::set<DoubleVariable> mDoubleVariablesNeedValue;      //variables whose value need to be interpolated
     std::set<DoubleVariable> mDoubleVariablesNeedDX;         //variables whose gradient need to be interpolated
 
-    // std::set<Array1dComponentVariable> mArray1dComponentVariablesNeedEquationId;
-    // std::set<Array1dComponentVariable> mArray1dComponentVariablesNeedValue;
-    // std::set<Array1dComponentVariable> mArray1dComponentVariablesNeedDX;
+    std::set<Array1dComponentVariable> mArray1dComponentVariablesNeedEquationId;
+    std::set<Array1dComponentVariable> mArray1dComponentVariablesNeedValue;
+    std::set<Array1dComponentVariable> mArray1dComponentVariablesNeedDX;
 
     friend class DistributedAssignment::DataUtility::DataPrinter;
 };

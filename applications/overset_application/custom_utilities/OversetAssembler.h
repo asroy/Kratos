@@ -586,6 +586,21 @@ public:
         mpInterpolationMethod->AddVariableNeedDX(r_variable);
     }
 
+    void AddInterpolatedVariableNeedEquationId( const Array1dComponentVariable & r_variable )
+    {
+        mpInterpolationMethod->AddVariableNeedEquationId(r_variable);
+    }
+
+    void AddInterpolatedVariableNeedValue( const Array1dComponentVariable & r_variable )
+    {
+        mpInterpolationMethod->AddVariableNeedValue(r_variable);
+    }
+
+    void AddInterpolatedVariableNeedDX( const Array1dComponentVariable & r_variable )
+    {
+        mpInterpolationMethod->AddVariableNeedDX(r_variable);
+    }
+
 private:
     const ModelPart & mrModelPart;
     OversetCommunicator mOversetCommunicator;
