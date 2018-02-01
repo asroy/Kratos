@@ -5,7 +5,6 @@ import KratosMultiphysics
 import KratosMultiphysics.mpi as KratosMPI                          # MPI-python interface
 
 # Check that applications were imported in the main script
-# KratosMultiphysics.CheckRegisteredApplications("FluidDynamicsApplication","MetisApplication","TrilinosApplication","OversetApplication")
 KratosMultiphysics.CheckRegisteredApplications("FluidDynamicsApplication","MetisApplication","TrilinosApplication")
 
 # Import applications
@@ -56,7 +55,7 @@ class NavierStokesOversetMPISolver_VMSMonolithic(trilinos_navier_stokes_solver_v
                 "reform_preconditioner_at_each_step" : true,
                 "scaling"                            : true
             },
-            "volume_model_part_name" : "volume_model_part",
+            "volume_submodel_parts" : [""],
             "skin_parts": [""],
             "no_skin_parts":[""],
             "time_stepping": {
@@ -179,11 +178,11 @@ class NavierStokesOversetMPISolver_VMSMonolithic(trilinos_navier_stokes_solver_v
     def _ExecuteAfterReading(self):
         ## Check that the input read has the shape we like
         prepare_model_part_settings = KratosMultiphysics.Parameters("{}")
-        prepare_model_part_settings.AddValue("volume_model_part_name",self.settings["volume_model_part_name"])
+        prepare_model_part_settings.AddValue("volume_submodel_parts",self.settings["volume_submodel_parts"])
         prepare_model_part_settings.AddValue("skin_parts",self.settings["skin_parts"])
 
-        import check_and_prepare_model_process_fluid
-        check_and_prepare_model_process_fluid.CheckAndPrepareModelProcess(self.main_model_part, prepare_model_part_settings).Execute()
+        import overset_check_and_prepare_model_process_fluid
+        overset_check_and_prepare_model_process_fluid.CheckAndPrepareModelProcess(self.main_model_part, prepare_model_part_settings).Execute()
 
         # Read the KINEMATIC VISCOSITY and DENSITY and we apply it to the nodes
         for el in self.main_model_part.Elements:
