@@ -18,14 +18,8 @@ class OversetTrilinosBlockBuilderAndSolverPeriodic
 public:
     KRATOS_CLASS_POINTER_DEFINITION( OversetTrilinosBlockBuilderAndSolverPeriodic );
 
-    OversetTrilinosBlockBuilderAndSolverPeriodic
-    (
-        Epetra_MpiComm& Comm,
-        int guess_row_size,
-        typename TLinearSolver::Pointer pNewLinearSystemSolver,
-        OversetAssembly::OversetAssembler & r_overset_assembler
-    )
-        :   BaseType(Comm, guess_row_size,pNewLinearSystemSolver),
+    OversetTrilinosBlockBuilderAndSolverPeriodic(Epetra_MpiComm& Comm, int guess_row_size, typename TLinearSolver::Pointer pNewLinearSystemSolver, const Kratos::Variable<int>& PeriodicIdVar, OversetAssembly::OversetAssembler & r_overset_assembler)
+        :   BaseType(Comm, guess_row_size, pNewLinearSystemSolver, PeriodicIdVar),
             mrOversetAssembler{r_overset_assembler}
     {}
 
