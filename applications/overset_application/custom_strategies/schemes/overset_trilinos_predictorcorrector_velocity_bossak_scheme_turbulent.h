@@ -17,19 +17,25 @@ class OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulent
 public:
     KRATOS_CLASS_POINTER_DEFINITION( OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulent );
 
-    OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulent (OversetAssembly::OversetAssembler & r_overset_assembler)
-        :   BaseType(),
+    OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulent (double NewAlphaBossak, double MoveMeshStrategy, unsigned int DomainSize, OversetAssembly::OversetAssembler & r_overset_assembler)
+        :   BaseType( NewAlphaBossak, MoveMeshStrategy, DomainSize ),
+            mrOversetAssembler{r_overset_assembler}
+    {}
+
+    OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulent (double NewAlphaBossak, double MoveMeshStrategy, unsigned int DomainSize, Process::Pointer pTurbulenceModel, OversetAssembly::OversetAssembler & r_overset_assembler)
+        :   BaseType( NewAlphaBossak, MoveMeshStrategy, DomainSize, pTurbulenceModel ),
+            mrOversetAssembler{r_overset_assembler}
+    {}
+
+    OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulent (double NewAlphaBossak, double MoveMeshStrategy, unsigned int DomainSize, const Variable<int>& rPeriodicIdVar, OversetAssembly::OversetAssembler & r_overset_assembler)
+        :   BaseType( NewAlphaBossak, MoveMeshStrategy, DomainSize, rPeriodicIdVar),
             mrOversetAssembler{r_overset_assembler}
     {}
 
     ~OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulent() override
     {}
 
-    void Update(ModelPart & r_model_part,
-                typename BaseType::DofsArrayType & rDofSet,
-                typename BaseType::TSystemMatrixType & A,
-                typename BaseType::TSystemVectorType & Dx,
-                typename BaseType::TSystemVectorType & b) override
+    void Update( ModelPart & r_model_part, typename BaseType::DofsArrayType & rDofSet, typename BaseType::TSystemMatrixType & A, typename BaseType::TSystemVectorType & Dx, typename BaseType::TSystemVectorType & b) override
     {
         std::cout<<"inside OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulent::"<<__func__<<std::endl;
         
@@ -45,7 +51,7 @@ public:
         //update hinge donor data
         mrOversetAssembler.InterpolateHingesDonorData();
     }
-    
+
 protected:
     OversetAssembly::OversetAssembler & mrOversetAssembler;
 };
