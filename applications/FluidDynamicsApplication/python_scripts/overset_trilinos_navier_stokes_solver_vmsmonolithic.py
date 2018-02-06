@@ -83,6 +83,25 @@ class NavierStokesOversetMPISolver_VMSMonolithic(trilinos_navier_stokes_solver_v
         print("Construction of NavierStokesOversetMPISolver_VMSMonolithic finished.")
 
     def Initialize(self):
+        ## overset assembler
+        self.overset_assembler = KratosOverset.OversetAssembler(self.main_model_part)
+
+        ## add variables whose value/derivative/equation-id are needed on the hinge side
+        self.overset_assembler.AddInterpolatedVariableNeedEquationId(KratosMultiphysics.VELOCITY_X)
+        self.overset_assembler.AddInterpolatedVariableNeedEquationId(KratosMultiphysics.VELOCITY_Y)
+        self.overset_assembler.AddInterpolatedVariableNeedEquationId(KratosMultiphysics.VELOCITY_Z)
+        self.overset_assembler.AddInterpolatedVariableNeedEquationId(KratosMultiphysics.PRESSURE)
+
+        self.overset_assembler.AddInterpolatedVariableNeedValue(KratosMultiphysics.VELOCITY_X)
+        self.overset_assembler.AddInterpolatedVariableNeedValue(KratosMultiphysics.VELOCITY_Y)
+        self.overset_assembler.AddInterpolatedVariableNeedValue(KratosMultiphysics.VELOCITY_Z)
+        self.overset_assembler.AddInterpolatedVariableNeedValue(KratosMultiphysics.PRESSURE)
+
+        self.overset_assembler.AddInterpolatedVariableNeedDXKratosMultiphysics.VELOCITY_X)
+        self.overset_assembler.AddInterpolatedVariableNeedDXKratosMultiphysics.VELOCITY_Y)
+        self.overset_assembler.AddInterpolatedVariableNeedDXKratosMultiphysics.VELOCITY_Z)
+        self.overset_assembler.AddInterpolatedVariableNeedDXKratosMultiphysics.PRESSURE)
+
         ## Construct the communicator
         self.EpetraCommunicator = KratosTrilinos.CreateCommunicator()
 
@@ -103,13 +122,15 @@ class NavierStokesOversetMPISolver_VMSMonolithic(trilinos_navier_stokes_solver_v
         if (self.settings["turbulence_model"].GetString() == "None"):
             if self.settings["consider_periodic_conditions"].GetBool() == True:
                 self.time_scheme = KratosOverset.OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulent(self.settings["alpha"].GetDouble(),
-                                                                                                          self.settings["move_mesh_strategy"].GetInt(),
-                                                                                                          self.computing_model_part.ProcessInfo[KratosMultiphysics.DOMAIN_SIZE],
-                                                                                                          KratosCFD.PATCH_INDEX)
+                                                                                                                self.settings["move_mesh_strategy"].GetInt(),
+                                                                                                                self.computing_model_part.ProcessInfo[KratosMultiphysics.DOMAIN_SIZE],
+                                                                                                                KratosCFD.PATCH_INDEX,
+                                                                                                                self.overset_assembler)
             else:
                 self.time_scheme = KratosOverset.OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulent(self.settings["alpha"].GetDouble(),
-                                                                                                          self.settings["move_mesh_strategy"].GetInt(),
-                                                                                                          self.computing_model_part.ProcessInfo[KratosMultiphysics.DOMAIN_SIZE])
+                                                                                                                self.settings["move_mesh_strategy"].GetInt(),
+                                                                                                                self.computing_model_part.ProcessInfo[KratosMultiphysics.DOMAIN_SIZE],
+                                                                                                                self.overset_assembler)
 
 
         ## Set the guess_row_size (guess about the number of zero entries) for the Trilinos builder and solver
@@ -123,11 +144,13 @@ class NavierStokesOversetMPISolver_VMSMonolithic(trilinos_navier_stokes_solver_v
             self.builder_and_solver = KratosOverset.OversetTrilinosBlockBuilderAndSolverPeriodic(self.EpetraCommunicator,
                                                                                            guess_row_size,
                                                                                            self.trilinos_linear_solver,
-                                                                                           KratosCFD.PATCH_INDEX)
+                                                                                           KratosCFD.PATCH_INDEX,
+                                                                                           self.overset_assembler)
         else:
             self.builder_and_solver = KratosOverset.OversetTrilinosBlockBuilderAndSolver(self.EpetraCommunicator,
-                                                                                   guess_row_size,
-                                                                                   self.trilinos_linear_solver)
+                                                                                        guess_row_size,
+                                                                                        self.trilinos_linear_solver,
+                                                                                        self.overset_assembler)
 
         ## Construct the Trilinos Newton-Raphson strategy
         self.solver = KratosTrilinos.TrilinosNewtonRaphsonStrategy(self.main_model_part,
