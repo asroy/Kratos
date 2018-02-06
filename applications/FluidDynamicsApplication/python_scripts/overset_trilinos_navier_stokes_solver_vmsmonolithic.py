@@ -102,12 +102,12 @@ class NavierStokesOversetMPISolver_VMSMonolithic(trilinos_navier_stokes_solver_v
         ## Creating the Trilinos time scheme
         if (self.settings["turbulence_model"].GetString() == "None"):
             if self.settings["consider_periodic_conditions"].GetBool() == True:
-                self.time_scheme = KratosTrilinos.TrilinosPredictorCorrectorVelocityBossakSchemeTurbulent(self.settings["alpha"].GetDouble(),
+                self.time_scheme = KratosOverset.OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulent(self.settings["alpha"].GetDouble(),
                                                                                                           self.settings["move_mesh_strategy"].GetInt(),
                                                                                                           self.computing_model_part.ProcessInfo[KratosMultiphysics.DOMAIN_SIZE],
                                                                                                           KratosCFD.PATCH_INDEX)
             else:
-                self.time_scheme = KratosTrilinos.TrilinosPredictorCorrectorVelocityBossakSchemeTurbulent(self.settings["alpha"].GetDouble(),
+                self.time_scheme = KratosOverset.OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulent(self.settings["alpha"].GetDouble(),
                                                                                                           self.settings["move_mesh_strategy"].GetInt(),
                                                                                                           self.computing_model_part.ProcessInfo[KratosMultiphysics.DOMAIN_SIZE])
 
@@ -120,12 +120,12 @@ class NavierStokesOversetMPISolver_VMSMonolithic(trilinos_navier_stokes_solver_v
 
         ## Construct the Trilinos builder and solver
         if self.settings["consider_periodic_conditions"].GetBool() == True:
-            self.builder_and_solver = KratosTrilinos.TrilinosBlockBuilderAndSolverPeriodic(self.EpetraCommunicator,
+            self.builder_and_solver = KratosOverset.OversetTrilinosBlockBuilderAndSolverPeriodic(self.EpetraCommunicator,
                                                                                            guess_row_size,
                                                                                            self.trilinos_linear_solver,
                                                                                            KratosCFD.PATCH_INDEX)
         else:
-            self.builder_and_solver = KratosTrilinos.TrilinosBlockBuilderAndSolver(self.EpetraCommunicator,
+            self.builder_and_solver = KratosOverset.OversetTrilinosBlockBuilderAndSolver(self.EpetraCommunicator,
                                                                                    guess_row_size,
                                                                                    self.trilinos_linear_solver)
 
