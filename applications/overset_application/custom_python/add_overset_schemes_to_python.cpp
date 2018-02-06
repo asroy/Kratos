@@ -29,6 +29,7 @@
 //overset includes
 #include "custom_python/add_overset_schemes_to_python.h"
 #include "custom_strategies/schemes/overset_trilinos_residualbased_incrementalupdate_static_scheme.h"
+#include "custom_strategies/schemes/overset_trilinos_predictorcorrector_velocity_bossak_scheme_turbulent.h"
 
 namespace Kratos
 {
