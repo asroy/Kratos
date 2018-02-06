@@ -101,10 +101,18 @@ namespace Kratos
 			// typedef BuilderAndSolver< TrilinosSparseSpaceType, TrilinosLocalSpaceType, TrilinosLinearSolverType > TrilinosBuilderAndSolverType;
 		
 			using TrilinosBlockBuilderAndSolverType = TrilinosBlockBuilderAndSolver< TrilinosSparseSpaceType, TrilinosLocalSpaceType, TrilinosLinearSolverType >;
+	
 			using OversetTrilinosBlockBuilderAndSolverType = OversetTrilinosBlockBuilderAndSolver< TrilinosSparseSpaceType, TrilinosLocalSpaceType, TrilinosLinearSolverType >;
+
+			using TrilinosBlockBuilderAndSolverPeriodicType = TrilinosBlockBuilderAndSolverPeriodic< TrilinosSparseSpaceType, TrilinosLocalSpaceType, TrilinosLinearSolverType >;
+	
+			using OversetTrilinosBlockBuilderAndSolverPeriodicType = OversetTrilinosBlockBuilderAndSolverPeriodic< TrilinosSparseSpaceType, TrilinosLocalSpaceType, TrilinosLinearSolverType >;
 
 			class_< OversetTrilinosBlockBuilderAndSolverType,bases< TrilinosBlockBuilderAndSolverType >, boost::noncopyable >
 			( "OversetTrilinosBlockBuilderAndSolver", init<Epetra_MpiComm&, int, TrilinosLinearSolverType::Pointer, OversetAssembly::OversetAssembler & > () );
+
+			class_< OversetTrilinosBlockBuilderAndSolverPeriodicType,bases< TrilinosBlockBuilderAndSolverPeriodicType >, boost::noncopyable >
+			( "OversetTrilinosBlockBuilderAndSolverPeriodic", init<Epetra_MpiComm&, int, TrilinosLinearSolverType::Pointer, OversetAssembly::OversetAssembler & > () );
 		}
 
 	}  // namespace Python.

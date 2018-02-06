@@ -42,10 +42,18 @@ namespace Kratos
 			typedef UblasSpace<double, Matrix, Vector> TrilinosLocalSpaceType;
 
 			using TrilinosResidualBasedIncrementalUpdateStaticSchemeType = TrilinosResidualBasedIncrementalUpdateStaticScheme< TrilinosSparseSpaceType, TrilinosLocalSpaceType> ;
-			using OVersetTrilinosResidualBasedIncrementalUpdateStaticSchemeType = OversetTrilinosResidualBasedIncrementalUpdateStaticScheme< TrilinosSparseSpaceType, TrilinosLocalSpaceType> ;
-			
-			class_< OVersetTrilinosResidualBasedIncrementalUpdateStaticSchemeType,bases< TrilinosResidualBasedIncrementalUpdateStaticSchemeType >, boost::noncopyable >
+		
+			using OversetTrilinosResidualBasedIncrementalUpdateStaticSchemeType = OversetTrilinosResidualBasedIncrementalUpdateStaticScheme< TrilinosSparseSpaceType, TrilinosLocalSpaceType> ;
+
+			using TrilinosPredictorCorrectorVelocityBossakSchemeTurbulentType = TrilinosPredictorCorrectorVelocityBossakSchemeTurbulent< TrilinosSparseSpaceType, TrilinosLocalSpaceType> ;
+
+			using OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulentType = OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulent< TrilinosSparseSpaceType, TrilinosLocalSpaceType> ;
+
+			class_< OversetTrilinosResidualBasedIncrementalUpdateStaticSchemeType,bases< TrilinosResidualBasedIncrementalUpdateStaticSchemeType >, boost::noncopyable >
 			( "OversetTrilinosResidualBasedIncrementalUpdateStaticScheme", init<OversetAssembly::OversetAssembler & > () );
+
+			class_< OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulentType,bases< TrilinosPredictorCorrectorVelocityBossakSchemeTurbulentType >, boost::noncopyable >
+			( "OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulent", init<OversetAssembly::OversetAssembler & > () );
 		}
 
 	}  // namespace Python.
