@@ -82,6 +82,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //overset includes
 #include "custom_python/add_overset_strategies_to_python.h"
 #include "custom_strategies/builder_and_solvers/overset_trilinos_block_builder_and_solver.h"
+#include "custom_strategies/builder_and_solvers/overset_trilinos_block_builder_and_solver_periodic.h"
 
 namespace Kratos
 {
