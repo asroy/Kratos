@@ -30,7 +30,6 @@ OversetCondition::OversetCondition(IndexType NewId)
     :   Condition(NewId),
         mpAdjacentElement{nullptr},
         mAdjacentElementSide{0},
-        // mIntegrationMethod{GeometryData::GI_GAUSS_3}
         mIntegrationMethod{GetIntegrationMethod()}
 {}
 
@@ -38,7 +37,6 @@ OversetCondition::OversetCondition(IndexType NewId, GeometryType::Pointer pGeome
     :   Condition(NewId, pGeometry),
         mpAdjacentElement{nullptr},
         mAdjacentElementSide{0},
-        // mIntegrationMethod{GeometryData::GI_GAUSS_3}
         mIntegrationMethod{GetIntegrationMethod()}
 {}
 
@@ -46,7 +44,6 @@ OversetCondition::OversetCondition(IndexType NewId, GeometryType::Pointer pGeome
     :   Condition(NewId, pGeometry, pProperties),
         mpAdjacentElement{nullptr},
         mAdjacentElementSide{0},
-        // mIntegrationMethod{GeometryData::GI_GAUSS_3}
         mIntegrationMethod{GetIntegrationMethod()}
 {}
 

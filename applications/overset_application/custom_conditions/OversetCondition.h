@@ -82,7 +82,6 @@ private:
     const Element * mpAdjacentElement;
     std::size_t mAdjacentElementSide;
 
-    IntegrationMethod mIntegrationMethod;
     std::vector<IntegrationPointType> mHinges;
     std::vector<OversetAssembly::HingeDonorInfo> mHingesDonorInfo;
     std::vector<OversetAssembly::HingeDonorData> mHingesDonorData;
