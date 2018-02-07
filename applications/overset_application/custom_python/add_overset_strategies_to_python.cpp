@@ -108,7 +108,7 @@ namespace Kratos
 			( "OversetTrilinosBlockBuilderAndSolver", init<Epetra_MpiComm&, int, TrilinosLinearSolverType::Pointer, OversetAssembly::OversetAssembler & > () );
 
 			class_< OversetTrilinosBlockBuilderAndSolverPeriodicType,bases< TrilinosBlockBuilderAndSolverPeriodicType >, boost::noncopyable >
-			( "OversetTrilinosBlockBuilderAndSolverPeriodic", init<Epetra_MpiComm&, int, TrilinosLinearSolverType::Pointer, OversetAssembly::OversetAssembler & > () );
+			( "OversetTrilinosBlockBuilderAndSolverPeriodic", init<Epetra_MpiComm &, int, TrilinosLinearSolverType::Pointer, const Variable<int> &, OversetAssembly::OversetAssembler & > () );
 		}
 
 	}  // namespace Python.

@@ -55,7 +55,10 @@ namespace Kratos
 			using OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulentType = OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulent< TrilinosSparseSpaceType, TrilinosLocalSpaceType> ;
 			
 			class_< OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulentType,bases< TrilinosPredictorCorrectorVelocityBossakSchemeTurbulentType >, boost::noncopyable >
-			( "OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulent", init<OversetAssembly::OversetAssembler & > () );
+			( "OversetTrilinosPredictorCorrectorVelocityBossakSchemeTurbulent", init<double, double, unsigned int, Process::Pointer, OversetAssembly::OversetAssembler & > () )
+				.def(init<double,double,unsigned int, OversetAssembly::OversetAssembler & > ())
+            	.def(init<double,double,unsigned int, const Variable<int>&, OversetAssembly::OversetAssembler & > ());
+           ;;
 		}
 
 	}  // namespace Python.
