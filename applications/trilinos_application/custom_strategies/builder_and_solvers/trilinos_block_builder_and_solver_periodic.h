@@ -13,7 +13,7 @@
 /* Project includes */
 #include "includes/define.h"
 #include "solving_strategies/builder_and_solvers/builder_and_solver.h"
-#include "custom_strategies/builder_and_solvers/trilinos_block_builder_and_solver.h"
+#include "trilinos_application/custom_strategies/builder_and_solvers/trilinos_block_builder_and_solver.h"
 
 //trilinos includes
 #include "Epetra_MpiComm.h"
