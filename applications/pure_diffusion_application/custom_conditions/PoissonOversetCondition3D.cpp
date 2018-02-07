@@ -18,13 +18,19 @@
 
 namespace Kratos
 {
+
+//************************************************************************************
+//************************************************************************************
+//default protected constructor
+PoissonOversetCondition3D::PoissonOversetCondition3D(IndexType NewId)
+	:	OversetCondition(NewId)
+{}
+
 //************************************************************************************
 //************************************************************************************
 PoissonOversetCondition3D::PoissonOversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry)
 	: 	OversetCondition(NewId, pGeometry)
-{		
-	//DO NOT ADD DOFS HERE!!!
-}
+{}
 
 //************************************************************************************
 //************************************************************************************

@@ -58,10 +58,8 @@ public:
     void GetDofList(DofsVectorType& ConditionalDofList,ProcessInfo& CurrentProcessInfo) override;
  
 protected:
-	//default constructor necessary for serialization  
-    PoissonOversetCondition3D() 
-        :   OversetCondition()
-    {}
+    //default constructor necessary for serialization  
+    PoissonOversetCondition3D(IndexType NewId = 0);
 
 private:
     
