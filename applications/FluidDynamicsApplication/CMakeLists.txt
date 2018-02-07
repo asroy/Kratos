@@ -3,6 +3,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 message("**** configuring KratosFluidDynamicsApplication ****")
 
 include_directories( ${CMAKE_SOURCE_DIR}/kratos )
+include_directories( ${CMAKE_SOURCE_DIR}/applications )
 
 ## generate variables with the sources
 set( KRATOS_FLUID_DYNAMICS_APPLICATION_SOURCES
@@ -55,7 +56,7 @@ endif(${KRATOS_BUILD_TESTING} MATCHES ON)
 ## define library Kratos which defines the basic python interface
 add_library(KratosFluidDynamicsApplication SHARED ${KRATOS_FLUID_DYNAMICS_APPLICATION_SOURCES} ${KRATOS_FLUID_DYNAMICS_TESTING_SOURCES})
 
-target_link_libraries(KratosFluidDynamicsApplication KratosCore )
+target_link_libraries(KratosFluidDynamicsApplication KratosCore KratosOversetApplication)
 set_target_properties(KratosFluidDynamicsApplication PROPERTIES COMPILE_DEFINITIONS "FLUID_DYNAMICS_APPLICATION=EXPORT,API")
 set_target_properties(KratosFluidDynamicsApplication PROPERTIES PREFIX "")
 

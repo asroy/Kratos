@@ -53,6 +53,7 @@
 #include "custom_conditions/fs_periodic_condition.h"
 #include "custom_conditions/navier_stokes_wall_condition.h"
 #include "custom_conditions/embedded_ausas_navier_stokes_wall_condition.h"
+#include "custom_conditions/VmsOversetCondition3D.h"
 
 #include "custom_elements/dpg_vms.h"
 #include "custom_elements/bingham_fluid.h"
@@ -319,6 +320,10 @@ private:
     const EmbeddedAusasNavierStokes<3> mEmbeddedAusasNavierStokes3D;
     const EmbeddedAusasNavierStokesWallCondition<2> mEmbeddedAusasNavierStokesWallCondition2D;
     const EmbeddedAusasNavierStokesWallCondition<3> mEmbeddedAusasNavierStokesWallCondition3D;
+
+    //overset condition corresponding to VMS element
+    const VmsOversetCondition3D mVmsOversetCondition3D;
+
 
     ///@}
     ///@name Private Operators

@@ -82,6 +82,8 @@ KratosFluidDynamicsApplication::KratosFluidDynamicsApplication()
     , mEmbeddedAusasNavierStokesWallCondition2D(0, Element::GeometryType::Pointer(new Line2D2<Node<3>>(Element::GeometryType::PointsArrayType(2))))
     , mEmbeddedAusasNavierStokesWallCondition3D(0, Element::GeometryType::Pointer(new Triangle3D3<Node<3>>(Element::GeometryType::PointsArrayType(3))))
 
+    //overset condition corresponding to VMS element
+    , mVmsOversetCondition3D(0, Condition::GeometryType::Pointer(new Triangle3D3<Node<3>>(Condition::GeometryType::PointsArrayType(3))))
 {}
 
 void KratosFluidDynamicsApplication::Register() {
@@ -184,6 +186,9 @@ void KratosFluidDynamicsApplication::Register() {
     KRATOS_REGISTER_CONDITION("FSPeriodicCondition3D", mFSPeriodicCondition3D);
     KRATOS_REGISTER_CONDITION("FSPeriodicConditionEdge2D", mFSPeriodicConditionEdge2D);
     KRATOS_REGISTER_CONDITION("FSPeriodicConditionEdge3D", mFSPeriodicConditionEdge3D);
+
+    //overset condition corresponding to VMS element
+    KRATOS_REGISTER_CONDITION("VmsOversetCondition3D", mVmsOversetCondition3D);
 }
 
 }  // namespace Kratos.
