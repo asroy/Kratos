@@ -35,6 +35,7 @@ set( KRATOS_FLUID_DYNAMICS_APPLICATION_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/fs_periodic_condition.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/navier_stokes_wall_condition.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/embedded_ausas_navier_stokes_wall_condition.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/VmsOversetCondition3D.cpp
 
   ${CMAKE_CURRENT_SOURCE_DIR}/custom_constitutive/bingham_3d_law.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/custom_constitutive/euler_2d_law.cpp

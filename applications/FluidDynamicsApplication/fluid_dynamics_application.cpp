@@ -83,7 +83,7 @@ KratosFluidDynamicsApplication::KratosFluidDynamicsApplication()
     , mEmbeddedAusasNavierStokesWallCondition3D(0, Element::GeometryType::Pointer(new Triangle3D3<Node<3>>(Element::GeometryType::PointsArrayType(3))))
 
     //overset condition corresponding to VMS element
-    , mVmsOversetCondition3D(0, Condition::GeometryType::Pointer(new Triangle3D3<Node<3>>(Condition::GeometryType::PointsArrayType(3))))
+    , mVmsOversetCondition3D ( 0, Condition::GeometryType::Pointer(new Triangle3D3  <Node<3>> ( Condition::GeometryType::PointsArrayType (3) ) ) )
 {}
 
 void KratosFluidDynamicsApplication::Register() {

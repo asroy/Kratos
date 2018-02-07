@@ -58,9 +58,7 @@ public:
  
 protected:
 	//default constructor necessary for serialization  
-    VmsOversetCondition3D(IndexType NewId = 0) 
-        :   OversetCondition(NewId)
-    {}
+    VmsOversetCondition3D(IndexType NewId = 0);
 
 private:
     
