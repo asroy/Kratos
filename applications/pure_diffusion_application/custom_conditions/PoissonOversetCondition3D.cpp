@@ -140,7 +140,7 @@ void PoissonOversetCondition3D::CalculateRightHandSide(VectorType& rRightHandSid
 		//donor element
 		//  donor element temperature and global gradient
 		double temp_donor_element = r_hinge_donor_data.GetValue(TEMPERATURE);
-		std::vector<double> dtemp_dxs = r_hinge_donor_data.GetDVDXs(TEMPERATURE);
+		std::vector<double> dtemp_dxs = r_hinge_donor_data.GetDValueDXs(TEMPERATURE);
 
 		Vector Dtemp_DXs_donor_element(3);
 		Dtemp_DXs_donor_element[0] = dtemp_dxs[0];
