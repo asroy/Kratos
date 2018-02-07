@@ -14,13 +14,13 @@
 #include "includes/define.h"
 #include "utilities/math_utils.h"
 
-#include "custom_conditions/VMSOversetCondition3D.h"
+#include "custom_conditions/VmsOversetCondition3D.h"
 
 namespace Kratos
 {
 //************************************************************************************
 //************************************************************************************
-VMSOversetCondition3D::VMSOversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry)
+VmsOversetCondition3D::VmsOversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry)
 	: 	OversetCondition(NewId, pGeometry)
 {		
 	//DO NOT ADD DOFS HERE!!!
@@ -28,23 +28,23 @@ VMSOversetCondition3D::VMSOversetCondition3D(IndexType NewId, GeometryType::Poin
 
 //************************************************************************************
 //************************************************************************************
-VMSOversetCondition3D::VMSOversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry,  PropertiesType::Pointer pProperties)
+VmsOversetCondition3D::VmsOversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry,  PropertiesType::Pointer pProperties)
 	: 	OversetCondition(NewId, pGeometry, pProperties)
 {}
 
 //************************************************************************************
 //************************************************************************************
-Condition::Pointer VMSOversetCondition3D::Create(IndexType NewId, NodesArrayType const& ThisNodes,  PropertiesType::Pointer pProperties) const
+Condition::Pointer VmsOversetCondition3D::Create(IndexType NewId, NodesArrayType const& ThisNodes,  PropertiesType::Pointer pProperties) const
 {
-	return Condition::Pointer(new VMSOversetCondition3D(NewId, GetGeometry().Create(ThisNodes), pProperties));
+	return Condition::Pointer(new VmsOversetCondition3D(NewId, GetGeometry().Create(ThisNodes), pProperties));
 }
 
-VMSOversetCondition3D::~VMSOversetCondition3D()
+VmsOversetCondition3D::~VmsOversetCondition3D()
 {}
 
 //************************************************************************************
 //************************************************************************************
-void VMSOversetCondition3D::CalculateLocalSystem(MatrixType & rLeftHandSideMatrix, VectorType & rRightHandSideVector, ProcessInfo & rCurrentProcessInfo)
+void VmsOversetCondition3D::CalculateLocalSystem(MatrixType & rLeftHandSideMatrix, VectorType & rRightHandSideVector, ProcessInfo & rCurrentProcessInfo)
 {
 	KRATOS_TRY
 
@@ -56,7 +56,7 @@ void VMSOversetCondition3D::CalculateLocalSystem(MatrixType & rLeftHandSideMatri
 
 //************************************************************************************
 //************************************************************************************
-void VMSOversetCondition3D::CalculateRightHandSide(VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo)
+void VmsOversetCondition3D::CalculateRightHandSide(VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo)
 {
 	KRATOS_TRY
 
@@ -88,7 +88,7 @@ void VMSOversetCondition3D::CalculateRightHandSide(VectorType& rRightHandSideVec
 	KRATOS_CATCH("")
 }
 
-void VMSOversetCondition3D::CalculateLeftHandSide(MatrixType & rLeftHandSideMatrix, ProcessInfo & rCurrentProcessInfo)
+void VmsOversetCondition3D::CalculateLeftHandSide(MatrixType & rLeftHandSideMatrix, ProcessInfo & rCurrentProcessInfo)
 {
 	KRATOS_TRY
 
@@ -113,7 +113,7 @@ void VMSOversetCondition3D::CalculateLeftHandSide(MatrixType & rLeftHandSideMatr
 	KRATOS_CATCH("")
 }
 
-void VMSOversetCondition3D::LocalEquationIdVector(EquationIdVectorType& rResult, ProcessInfo & rCurrentProcessInfo)
+void VmsOversetCondition3D::LocalEquationIdVector(EquationIdVectorType& rResult, ProcessInfo & rCurrentProcessInfo)
 {
     const SizeType NumNodes = 3;
     const SizeType LocalSize = 12;
@@ -131,7 +131,7 @@ void VMSOversetCondition3D::LocalEquationIdVector(EquationIdVectorType& rResult,
     }
 }
 
-void VMSOversetCondition3D::DonorEquationIdVector(EquationIdVectorType& rResult, ProcessInfo & rCurrentProcessInfo)
+void VmsOversetCondition3D::DonorEquationIdVector(EquationIdVectorType& rResult, ProcessInfo & rCurrentProcessInfo)
 {
     std::size_t num_dof = 0;
 
@@ -179,7 +179,7 @@ void VMSOversetCondition3D::DonorEquationIdVector(EquationIdVectorType& rResult,
 
 //************************************************************************************
 //************************************************************************************
-void VMSOversetCondition3D::GetDofList(DofsVectorType& ConditionalDofList,ProcessInfo& CurrentProcessInfo)
+void VmsOversetCondition3D::GetDofList(DofsVectorType& ConditionalDofList,ProcessInfo& CurrentProcessInfo)
 {
 	const unsigned int num_dof = 4;
 

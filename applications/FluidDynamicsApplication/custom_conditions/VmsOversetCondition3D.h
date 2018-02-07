@@ -10,8 +10,8 @@
 //  Main authors:    YOUR_NAME_HERE
 //
 
-#if !defined(KRATOS_PoissonOverset3D_CONDITION_H_INCLUDED )
-#define  KRATOS_PoissonOverset3D_CONDITION_H_INCLUDED
+#if !defined(KRATOS_VMS_OVERSET_CONDITION_3D_H_INCLUDED )
+#define  KRATOS_VMS_OVERSET_CONDITION_3D_H_INCLUDED
 
 // External includes 
 #include "boost/smart_ptr.hpp"
@@ -28,19 +28,19 @@
 
 namespace Kratos
 {
-class VMSOversetCondition3D : public OversetCondition
+class VmsOversetCondition3D : public OversetCondition
 {
 public:
     ///@name Type Definitions
     ///@{
     
-    KRATOS_CLASS_POINTER_DEFINITION(VMSOversetCondition3D);
+    KRATOS_CLASS_POINTER_DEFINITION(VmsOversetCondition3D);
 
-    VMSOversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry);
+    VmsOversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry);
 
-    VMSOversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties);
+    VmsOversetCondition3D(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties);
 
-    ~VMSOversetCondition3D() override;
+    ~VmsOversetCondition3D() override;
 
     Condition::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes,  PropertiesType::Pointer pProperties) const override;
 
@@ -58,8 +58,8 @@ public:
  
 protected:
 	//default constructor necessary for serialization  
-    VMSOversetCondition3D() 
-        :   OversetCondition()
+    VmsOversetCondition3D(IndexType NewId = 0) 
+        :   OversetCondition(NewId)
     {}
 
 private:
