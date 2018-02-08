@@ -97,10 +97,10 @@ class NavierStokesOversetMPISolver_VMSMonolithic(trilinos_navier_stokes_solver_v
         self.overset_assembler.AddInterpolatedVariableNeedValue(KratosMultiphysics.VELOCITY_Z)
         self.overset_assembler.AddInterpolatedVariableNeedValue(KratosMultiphysics.PRESSURE)
 
-        self.overset_assembler.AddInterpolatedVariableNeedDXKratosMultiphysics.VELOCITY_X)
-        self.overset_assembler.AddInterpolatedVariableNeedDXKratosMultiphysics.VELOCITY_Y)
-        self.overset_assembler.AddInterpolatedVariableNeedDXKratosMultiphysics.VELOCITY_Z)
-        self.overset_assembler.AddInterpolatedVariableNeedDXKratosMultiphysics.PRESSURE)
+        self.overset_assembler.AddInterpolatedVariableNeedDX(KratosMultiphysics.VELOCITY_X)
+        self.overset_assembler.AddInterpolatedVariableNeedDX(KratosMultiphysics.VELOCITY_Y)
+        self.overset_assembler.AddInterpolatedVariableNeedDX(KratosMultiphysics.VELOCITY_Z)
+        self.overset_assembler.AddInterpolatedVariableNeedDX(KratosMultiphysics.PRESSURE)
 
         ## Construct the communicator
         self.EpetraCommunicator = KratosTrilinos.CreateCommunicator()

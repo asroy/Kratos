@@ -55,6 +55,10 @@ public:
     void DonorEquationIdVector(EquationIdVectorType & rResult, ProcessInfo & rCurrentProcessInfo) override;
 
     void GetDofList(DofsVectorType& ConditionalDofList,ProcessInfo& CurrentProcessInfo) override;
+
+    void CalculateFluxOperator( MatrixType &, const VectorType &, const VectorType & );
+
+    void CalculateMuMatrix( MatrixType &, const VectorType &, const VectorType &, const VectorType & );
  
 protected:
 	//default constructor necessary for serialization  

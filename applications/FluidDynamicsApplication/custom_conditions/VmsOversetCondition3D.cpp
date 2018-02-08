@@ -71,7 +71,6 @@ void VmsOversetCondition3D::CalculateRightHandSide(VectorType& rRightHandSideVec
 
 	//
 	const unsigned int num_dof = 4;
-
 	unsigned int num_parent_node = r_parent_element.size();
 
 	unsigned int size2 = num_dof*num_parent_node;
@@ -84,6 +83,126 @@ void VmsOversetCondition3D::CalculateRightHandSide(VectorType& rRightHandSideVec
 	rRightHandSideVector = ZeroVector(size2);
 	
 	//
+	VectorType parent_element_nodes_velocity_x(r_parent_element.size());
+	VectorType parent_element_nodes_velocity_y(r_parent_element.size());
+	VectorType parent_element_nodes_velocity_z(r_parent_element.size());
+	VectorType parent_element_nodes_pressure  (r_parent_element.size());
+
+	for(std::size_t i = 0; i < r_parent_element.size(); i++)
+	{
+		parent_element_nodes_velocity_x[i] = r_parent_element[i].FastGetSolutionStepValue(VELOCITY_X);
+		parent_element_nodes_velocity_y[i] = r_parent_element[i].FastGetSolutionStepValue(VELOCITY_Y);
+		parent_element_nodes_velocity_z[i] = r_parent_element[i].FastGetSolutionStepValue(VELOCITY_Z);
+		parent_element_nodes_pressure  [i] = r_parent_element[i].FastGetSolutionStepValue(PRESSURE);
+	}
+
+	printf("%s %d parent_element_nodes_pressure %lg %lg %lg %lg\n",__func__,1, parent_element_nodes_pressure[0], parent_element_nodes_pressure[1], parent_element_nodes_pressure[2], parent_element_nodes_pressure[3]);
+
+	//loop over hinges
+	for( std::size_t i_hinge = 0; i_hinge < NumberOfHinges(); i_hinge++ )
+	{
+		const IntegrationPointType & r_condition_integration_point = rHinge(i_hinge);
+		const double weight = r_condition_integration_point.Weight();
+		const OversetAssembly::HingeDonorData & r_hinge_donor_data = rHingeDonorData(i_hinge);
+
+		//condition
+		//  condition shape functions
+		VectorType Ns_condition;
+		r_condition.ShapeFunctionsValues( Ns_condition, r_condition_integration_point );
+
+		//  condition jacobian
+		Matrix condition_jacobian;
+		r_condition.Jacobian(condition_jacobian, r_condition_integration_point);
+		const double condition_jacobian_determinant = r_condition.DeterminantOfJacobian(r_condition_integration_point);
+
+		//  condition normal vector
+		VectorType normal_vector = ConditionJacobianToOutwardNormalVector(condition_jacobian);
+
+		//parent element
+		//  parent element point
+		Point parent_element_point;
+		r_parent_element.PointLocalCoordinates( parent_element_point, HingeGlobalCoordinate(i_hinge) );
+
+		//  parent element shape functions
+		VectorType Ns_parent_element(r_parent_element.size());
+		Matrix DNs_DEs_parent_element( r_parent_element.size(), 3 );
+		r_parent_element.ShapeFunctionsValues( Ns_parent_element, parent_element_point );
+		r_parent_element.ShapeFunctionsLocalGradients(DNs_DEs_parent_element, parent_element_point);
+
+		printf("%s %d Ns_parent_element %lg %lg %lg %lg\n",__func__,21, Ns_parent_element[0], Ns_parent_element[1], Ns_parent_element[2], Ns_parent_element[3]);
+		
+		//  parent element Jacbian matrix
+		Matrix jinv_parent_element(3,3);
+		r_parent_element.InverseOfJacobian( jinv_parent_element, parent_element_point );
+
+		//  parent shape functions Gradient
+		Matrix DNs_DXs_parent_element = prod(DNs_DEs_parent_element, jinv_parent_element);
+
+		//  parent element value and global gradient
+		VectorType parent_solution(4);
+		parent_solution[0] = boost::numeric::ublas::inner_prod( Ns_parent_element, parent_element_nodes_velocity_x );
+		parent_solution[1] = boost::numeric::ublas::inner_prod( Ns_parent_element, parent_element_nodes_velocity_y );
+		parent_solution[2] = boost::numeric::ublas::inner_prod( Ns_parent_element, parent_element_nodes_velocity_z );
+		parent_solution[3] = boost::numeric::ublas::inner_prod( Ns_parent_element, parent_element_nodes_pressure );
+		
+		printf("%s %d parent_element_pressure %lg\n",__func__,22, parent_solution[3]);
+
+		//   parent flux operator
+		MatrixType parent_flux_operator;
+		CalculateFluxOperator( parent_flux_operator, parent_solution, normal_vector );
+
+		VectorType parent_solution_flux = prod( parent_flux_operator, parent_solution );
+
+		//donor element
+		//  donor element temperature and global gradient
+		VectorType donor_solution(4);
+		donor_solution[0] = r_hinge_donor_data.GetValue(VELOCITY_X);
+		donor_solution[1] = r_hinge_donor_data.GetValue(VELOCITY_Y);
+		donor_solution[2] = r_hinge_donor_data.GetValue(VELOCITY_Z);
+		donor_solution[3] = r_hinge_donor_data.GetValue(PRESSURE);
+
+		printf("%s %d donor_element_pressure %lg \n",__func__,23, donor_solution[3]);
+
+		//   donor flux operator
+		MatrixType donor_flux_operator;
+		CalculateFluxOperator( donor_flux_operator, donor_solution, normal_vector );
+
+		VectorType donor_solution_flux = prod( donor_flux_operator, donor_solution );
+
+		//calculate mu
+		MatrixType mu_matrix;
+		CalculateMuMatrix( mu_matrix, parent_solution, donor_solution, normal_vector );
+
+		mu_matrix *= 1000;
+
+		printf("%s %d weight %lg determ %lg normal_vector %lg %lg %lg\n",__func__,24, weight, condition_jacobian_determinant, normal_vector[0], normal_vector[1], normal_vector[2]);
+
+		//calculate rhs
+		unsigned int i_dof = 0;
+		for( std::size_t i_parent_element_node = 0; i_parent_element_node < r_parent_element.size(); i_parent_element_node++ )
+		{
+			double tmp = Ns_parent_element[i_parent_element_node];
+			VectorType parent_test_function(4);
+			parent_test_function[0] = tmp;
+			parent_test_function[1] = tmp;
+			parent_test_function[2] = tmp;
+			parent_test_function[3] = tmp;
+
+			VectorType parent_test_function_flux = prod( parent_flux_operator, parent_test_function );
+
+			VectorType mm = prod( mu_matrix, parent_test_function );
+	
+			for( int ii = 0; ii < 4; ii++ )
+			{
+				rRightHandSideVector[i_dof++] += weight * condition_jacobian_determinant *
+					( 
+						- 0.5 * ( parent_solution_flux[ii] + donor_solution_flux[ii] ) * parent_test_function[ii]
+						+ 0.5 * ( parent_solution[ii] - donor_solution[ii] ) * parent_test_function_flux[ii]
+						+ ( parent_solution[ii] - donor_solution[ii] ) * mm[ii]
+					);
+			}
+		}
+	}
 
 	//opposite sign please
 	rRightHandSideVector = - rRightHandSideVector;
@@ -120,19 +239,22 @@ void VmsOversetCondition3D::CalculateLeftHandSide(MatrixType & rLeftHandSideMatr
 
 void VmsOversetCondition3D::LocalEquationIdVector(EquationIdVectorType& rResult, ProcessInfo & rCurrentProcessInfo)
 {
-    const SizeType NumNodes = 3;
-    const SizeType LocalSize = 12;
-    unsigned int LocalIndex = 0;
+	Element::GeometryType & r_element = ( const_cast<Element &> (rAdjacentElement()) ).GetGeometry();
+	
+	std::size_t num_node = r_element.size();
 
-    if (rResult.size() != LocalSize)
-        rResult.resize(LocalSize, false);
+    const SizeType num_dof = 4*num_node;
+    unsigned int i = 0;
 
-    for (unsigned int iNode = 0; iNode < NumNodes; ++iNode)
+    if (rResult.size() != num_dof)
+        rResult.resize(num_dof, false);
+
+    for (unsigned int iNode = 0; iNode < num_node; ++iNode)
     {
-        rResult[LocalIndex++] = this->GetGeometry()[iNode].GetDof(VELOCITY_X).EquationId();
-        rResult[LocalIndex++] = this->GetGeometry()[iNode].GetDof(VELOCITY_Y).EquationId();
-        rResult[LocalIndex++] = this->GetGeometry()[iNode].GetDof(VELOCITY_Z).EquationId();
-        rResult[LocalIndex++] = this->GetGeometry()[iNode].GetDof(PRESSURE).EquationId();
+        rResult[i++] = this->GetGeometry()[iNode].GetDof(VELOCITY_X).EquationId();
+        rResult[i++] = this->GetGeometry()[iNode].GetDof(VELOCITY_Y).EquationId();
+        rResult[i++] = this->GetGeometry()[iNode].GetDof(VELOCITY_Z).EquationId();
+        rResult[i++] = this->GetGeometry()[iNode].GetDof(PRESSURE).EquationId();
     }
 }
 
@@ -161,14 +283,10 @@ void VmsOversetCondition3D::DonorEquationIdVector(EquationIdVectorType& rResult,
 
         for( std::size_t j = 0; j < r_hinge_donor_data.NumberOfDonorNodes(); j++ )
         {
-			rResult[i] = r_hinge_donor_data.GetDonorNodeEquationId(VELOCITY_X, j);
-			i++;
-			rResult[i] = r_hinge_donor_data.GetDonorNodeEquationId(VELOCITY_Y, j);
-			i++;
-			rResult[i] = r_hinge_donor_data.GetDonorNodeEquationId(VELOCITY_Z, j);
-			i++;
-            rResult[i] = r_hinge_donor_data.GetDonorNodeEquationId(TEMPERATURE, j);
-			i++;
+			rResult[i++] = r_hinge_donor_data.GetDonorNodeEquationId(VELOCITY_X, j);
+			rResult[i++] = r_hinge_donor_data.GetDonorNodeEquationId(VELOCITY_Y, j);
+			rResult[i++] = r_hinge_donor_data.GetDonorNodeEquationId(VELOCITY_Z, j);
+            rResult[i++] = r_hinge_donor_data.GetDonorNodeEquationId(PRESSURE, j);
 		}
 	}
 
@@ -198,4 +316,49 @@ void VmsOversetCondition3D::GetDofList(DofsVectorType& ConditionalDofList,Proces
 		ConditionalDofList[num_dof*i+3] = (GetGeometry()[i].pGetDof(TEMPERATURE));
 	}
 }
+
+void VmsOversetCondition3D::CalculateFluxOperator( MatrixType & r_flux_operator, const VectorType & r_solution, const VectorType & r_normal )
+{
+	r_flux_operator = ZeroMatrix(4,4);
+
+	double div = r_solution[0]*r_normal[0] + r_solution[1]*r_normal[1] + r_solution[2]*r_normal[2];
+
+	r_flux_operator(0,0) = div;
+	r_flux_operator(1,1) = div;
+	r_flux_operator(2,2) = div;
+
+	r_flux_operator(0,3) = - r_normal(0);
+	r_flux_operator(1,3) = - r_normal(1);
+	r_flux_operator(2,3) = - r_normal(2);
+
+	r_flux_operator(3,0) = r_normal(0);
+	r_flux_operator(3,1) = r_normal(1);
+	r_flux_operator(3,2) = r_normal(2);
+}
+
+void VmsOversetCondition3D::CalculateMuMatrix( MatrixType & r_mu_matrix, const VectorType & r_parent_solution, const VectorType & r_donor_solution, const VectorType & r_normal )
+{
+	r_mu_matrix = ZeroMatrix(4,4);
+
+	double parent_div = std::abs(r_parent_solution[0]*r_normal[0]) + std::abs(r_parent_solution[1]*r_normal[1]) + std::abs(r_parent_solution[2]*r_normal[2]);
+	double donor_div = std::abs(r_donor_solution[0]*r_normal[0]) + std::abs(r_donor_solution[1]*r_normal[1]) + std::abs(r_donor_solution[2]*r_normal[2]);
+
+	double div = 0.5*( parent_div + donor_div );
+	double n0 = std::abs(r_normal[0]);
+	double n1 = std::abs(r_normal[1]);
+	double n2 = std::abs(r_normal[2]);
+
+	r_mu_matrix(0,0) = div;
+	r_mu_matrix(1,1) = div;
+	r_mu_matrix(2,2) = div;
+
+	r_mu_matrix(0,3) = -n0;
+	r_mu_matrix(1,3) = -n1;
+	r_mu_matrix(2,3) = -n2;
+
+	r_mu_matrix(3,0) = n0;
+	r_mu_matrix(3,1) = n1;
+	r_mu_matrix(3,2) = n2;
+}
+
 } // Namespace Kratos
