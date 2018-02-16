@@ -154,7 +154,7 @@ void VmsOversetCondition3D::CalculateRightHandSide(VectorType& rRightHandSideVec
 		VectorType parent_solution_flux = prod( parent_flux_operator, parent_solution );
 
 		//donor element
-		//  donor element temperature and global gradient
+		//  donor element value and global gradient
 		VectorType donor_solution(4);
 		donor_solution[0] = r_hinge_donor_data.GetValue(VELOCITY_X);
 		donor_solution[1] = r_hinge_donor_data.GetValue(VELOCITY_Y);
@@ -313,7 +313,7 @@ void VmsOversetCondition3D::GetDofList(DofsVectorType& ConditionalDofList,Proces
 		ConditionalDofList[num_dof*i]   = (GetGeometry()[i].pGetDof(VELOCITY_X));
 		ConditionalDofList[num_dof*i+1] = (GetGeometry()[i].pGetDof(VELOCITY_Y));
 		ConditionalDofList[num_dof*i+2] = (GetGeometry()[i].pGetDof(VELOCITY_Z));
-		ConditionalDofList[num_dof*i+3] = (GetGeometry()[i].pGetDof(TEMPERATURE));
+		ConditionalDofList[num_dof*i+3] = (GetGeometry()[i].pGetDof(PRESSURE));
 	}
 }
 
